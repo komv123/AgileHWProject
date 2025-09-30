@@ -31,6 +31,7 @@ Maintenance:
 - Improve performance (coloring, deeper zoom)
 
 ## Setup
-
-## Run
-
+For first-time run, open a terminal in the folder where this project is cloned and run:
+```bash
+sbt run
+```
