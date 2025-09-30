@@ -16,8 +16,21 @@ Features:
 - Zoom in/out functionality
 - Optional: support other fractals/algorithms (Julia set, Game of Life)
 
-## Setup
+Implementation:
+- VGA test pattern
+- Single CU Mandelbrot computation
+- Parallel CUs for full frame
+- Zoom logic & user input
 
+Verification:
+- Compare output with reference Mandelbrot images
+- Simulation + FPGA testbench
+
+Maintenance:
+- Extend with new algorithms (Julia set, Game of Life)
+- Improve performance (coloring, deeper zoom)
+
+## Setup
 
 ## Run
 
