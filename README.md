@@ -31,7 +31,7 @@ Maintenance:
 - Improve performance (coloring, deeper zoom)
 
 ## Setup
-For first-time run, open a terminal in the folder where this project is cloned and run:
-```bash
-sbt run
+This project uses the [Nix](https://github.com/NixOS/nix) package manager. You can use the Flake provided in this repository to install all dependencies in a development environment:
+```shell
+nix develop
 ```
