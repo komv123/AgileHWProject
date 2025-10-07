@@ -41,9 +41,14 @@ Maintenance:
 
 For first-time run, open a terminal in the folder where this project is cloned and run:
 
-```bash
+````bash
 ./mill _.test
-```
+
+
+You can also use the [Nix](https://github.com/NixOS/nix) package manager. You can use the Flake provided in this repository to install all dependencies in a development environment:
+```shell
+nix develop
+````
 
 _JVM_ and _Verilator_ should be installed to be able to run the tests. Mill is a local script that downloads a local binary for the build tool.
 
