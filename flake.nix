@@ -11,9 +11,10 @@
       let
         pkgs = import nixpkgs { inherit system; };
         packages = with pkgs; [
-          sbt
+          mill
           verilator
           circt
+          python3
         ];
       in {
         devShells = {
