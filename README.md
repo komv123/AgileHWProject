@@ -33,5 +33,5 @@ Maintenance:
 ## Setup
 For first-time run, open a terminal in the folder where this project is cloned and run:
 ```bash
-sbt run
+./mill _.test
 ```
