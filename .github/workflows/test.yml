@@ -3,7 +3,7 @@ name: Continuous Integration
 on:
   push:
     tags: ["*"]
-    branches: ["main"]
+    branches: ["*"]
   pull_request:
   workflow_dispatch:
 
