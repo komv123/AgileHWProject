@@ -12,20 +12,6 @@ jobs:
     name: ci
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Cleanup
-        run: sed -i "s/%NAME%/test/g" build.mill
-      - name: Cache Scala
-        uses: coursier/cache-action@v6
-      - name: Setup Scala
-        uses: coursier/setup-action@v1
-        with:
-          jvm: adopt:11
-          apps: sbt
-      - name: Setup Dependencies
-        run: |
-          sudo apt-get install verilator
-          verilator --version
-      - name: mill Test
-        run: ./mill _.test
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+      - run: nix develop -c mill _.test
