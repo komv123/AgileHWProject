@@ -1,6 +1,8 @@
+package vga
+
 import chisel3._
 
-class VGAController(freq: Int) extends Module{
+class VGAController(freq: Int) extends Module {
   val io = IO(new Bundle{
     val Rin, Gin, Bin = Input(UInt(4.W))
     val hSync, vSync = Output(Bool())

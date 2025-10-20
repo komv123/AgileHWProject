@@ -1,3 +1,5 @@
+package vga
+
 import chisel3._
 
 // Horizontal timing
@@ -7,7 +9,7 @@ import chisel3._
 // Back porch:    33 pixels
 // Whole line:    525 pixels
 
-class VerticalCounter extends Module{
+class VerticalCounter extends Module {
   val io = IO(new Bundle{
     val enVCnt = Input(Bool())
     val verCnt = Output(UInt(10.W))

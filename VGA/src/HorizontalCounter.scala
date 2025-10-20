@@ -1,3 +1,5 @@
+package vga
+
 import chisel3._
 
 // Horizontal timing
@@ -7,7 +9,7 @@ import chisel3._
 // Back porch:    48 pixels
 // Whole line:    800 pixels
 
-class HorizontalCounter extends Module{
+class HorizontalCounter extends Module {
   val io = IO(new Bundle{
     val pxlCLK = Input(Bool())
     val horCnt = Output(UInt(10.W))
