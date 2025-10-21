@@ -73,8 +73,9 @@ class VideoBuffer(config: Configuration) extends Module{
       Mem.io.Write.bits.addr := io.tilelink.a.bits.address + burstCounter
       Mem.io.Write.bits.data := io.tilelink.a.bits.data
 
-      when(burstCounter < io.tilelink.a.bits.address){
+      when(burstCounter < io.tilelink.a.bits.size){
         burstCounter := burstCounter + 1.U
+        stateReg := 1.U
       } .otherwise {
         stateReg := 2.U // Return ack
       }
@@ -84,15 +85,18 @@ class VideoBuffer(config: Configuration) extends Module{
       io.tilelink.a.ready := 0.U
       io.tilelink.d.valid := 1.U
 
+
+      io.tilelink.d.bits.opcode := 0.U //AccessAck
+      //io.tilelink.d.bits.param := Dontcare 
+      io.tilelink.d.bits.size := 0.U // Max burst = 2 ^ 24 words = 16777216
+      io.tilelink.d.bits.source := sourceReg
+      //io.tilelink.d.bits.sink := UInt(log2ceil(c.sourceCount).W)
+      //io.tilelink.d.bits.denied := UInt(1.W)
+      //io.tilelink.d.bits.data := UInt(c.busWidth.W)
+      //io.tilelink.d.bits.corrupt := UInt(1.W)
+        
       when(io.tilelink.d.ready){ // Send AccessAck
-        io.tilelink.d.bits.opcode := 0.U //AccessAck
-        //io.tilelink.d.bits.param := Dontcare 
-        io.tilelink.d.bits.size := 0.U // Max burst = 2 ^ 24 words = 16777216
-        io.tilelink.d.bits.source := sourceReg
-        //io.tilelink.d.bits.sink := UInt(log2ceil(c.sourceCount).W)
-        //io.tilelink.d.bits.denied := UInt(1.W)
-        //io.tilelink.d.bits.data := UInt(c.busWidth.W)
-        //io.tilelink.d.bits.corrupt := UInt(1.W)
+        stateReg := 0.U
       }
     }
   }
