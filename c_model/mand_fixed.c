@@ -74,14 +74,16 @@ int main(int argc, char* argv[])
   }
 
   /* Parse command line - still using doubles for convenience */
-  const double xmid = atof(argv[1]);
-  const double ymid = atof(argv[2]);
-  const double zoom = atof(argv[3]);
+  const int64_t xmid = double_to_fixed(atof(argv[1]));
+  const int64_t ymid = double_to_fixed(atof(argv[2]));
+  const uint64_t zoom = double_to_fixed(atof(argv[3]));
 
-  const int64_t xmin = double_to_fixed(xmid - (zoom / 2));
-  const int64_t xmax = double_to_fixed(xmid + (zoom / 2));
-  const int64_t ymin = double_to_fixed(ymid - ((zoom / 2) * 0.75));
-  const int64_t ymax = double_to_fixed(ymid + ((zoom / 2) * 0.75));
+  printf("Double to fixed xmid, ymid, zoom: %ld %ld %ld\n", xmid, ymid, zoom);
+
+  const int64_t xmin = xmid - (zoom / 2);
+  const int64_t xmax = xmid + (zoom / 2);
+  const int64_t ymin = ymid - ((zoom / 2) * 0.75);
+  const int64_t ymax = ymid + ((zoom / 2) * 0.75);
 
   const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 256 ? 256 : (unsigned short)atoi(argv[4]);
   
@@ -95,6 +97,7 @@ int main(int argc, char* argv[])
 
   /* Escape radius squared: 4.0 in fixed-point */
   int64_t escape = double_to_fixed(4.0);
+  printf("escape, df2.0: %ld, %ld\n", escape, double_to_fixed(2.0));
 
   FILE * fp = fopen(filename,"wb");
   fprintf(fp,
