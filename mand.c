@@ -36,6 +36,52 @@
 #include <math.h>
 #include <stdint.h>
 
+/*
+Position = 0.0     Color = (  0,   7, 100)
+Position = 0.16    Color = ( 32, 107, 203)
+Position = 0.42    Color = (237, 255, 255)
+Position = 0.6425  Color = (255, 170,   0)
+Position = 0.8575  Color = (  0,   2,   0)
+*/
+
+const uint8_t Red[5]    = {0, 32, 237, 255, 0};
+const uint8_t Green[5]  = {7, 107, 255, 170, 2};
+const uint8_t Blue[5]   = {100, 203, 255, 0, 0};
+
+void colored_pixels(FILE* fp, int k, uint16_t maxiter){
+  int Position[5] = {0, 0.16 * maxiter, 0.42 * maxiter, 0.64 * maxiter, maxiter};
+
+  if (k >= maxiter) {
+        /* interior */
+        const unsigned char black[] = {0, 0, 0};
+        fwrite (black, 3, 1, fp);
+      }
+      else {
+        /* Fit to colot palette */
+        /* Fit to color palette */
+        unsigned char color[3];
+        int segment = 0;
+        
+        // Find which segment k falls into
+        for (int i = 0; i < 4; i++) {
+            if (k >= Position[i] && k < Position[i+1]) {
+                segment = i;
+                break;
+            }
+        }
+        
+        // Interpolate within the segment
+        float t = (float)(k - Position[segment]) / (Position[segment+1] - Position[segment]);
+        
+        color[0] = Red[segment] + t * (Red[segment+1] - Red[segment]);
+        color[1] = Green[segment] + t * (Green[segment+1] - Green[segment]);
+        color[2] = Blue[segment] + t * (Blue[segment+1] - Blue[segment]);
+
+        fwrite(color, 3, 1, fp);
+      };
+}
+
+
 int main(int argc, char* argv[])
 {
   /* Parse the command line arguments. */
@@ -73,8 +119,8 @@ int main(int argc, char* argv[])
 
   /*write ASCII header to the file*/
   fprintf(fp,
-          "P6\n# Mandelbrot, xmin=%lf, xmax=%lf, ymin=%lf, ymax=%lf, maxiter=%d\n%d\n%d\n%d\n",
-          xmin, xmax, ymin, ymax, maxiter, xres, yres, (maxiter < 256 ? 256 : maxiter));
+          "P6\n# Mandelbrot, xmin=%lf, xmax=%lf, ymin=%lf, ymax=%lf, maxiter=%d\n%d %d\n255\n",
+          xmin, xmax, ymin, ymax, maxiter, xres, yres);
 
   /* Precompute pixel width and height. */
   double dx=(xmax-xmin)/xres;
@@ -84,6 +130,14 @@ int main(int argc, char* argv[])
   double u, v; /* Coordinates of the iterated point. */
   int i,j; /* Pixel counters */
   int k; /* Iteration counter */
+  
+  // for (y = 0; y < yres; y++){
+  //   for (x = 0; x < xres; x++){
+  //     k = x/4;
+  //     colored_pixels(fp, k, maxiter);
+  //   }
+  // }
+
   for (j = 0; j < yres; j++) {
     y = ymax - j * dy;
     for(i = 0; i < xres; i++) {
@@ -102,19 +156,12 @@ int main(int argc, char* argv[])
       /* compute  pixel color and write it to file */
       if (k >= maxiter) {
         /* interior */
-        const unsigned char black[] = {0, 0, 0, 0, 0, 0};
-        fwrite (black, 6, 1, fp);
+        const unsigned char black[] = {0, 0, 0};
+        fwrite (black, 3, 1, fp);
       }
       else {
         /* exterior */
-        unsigned char color[6];
-        color[0] = k >> 8;
-        color[1] = k & 255;
-        color[2] = k >> 8;
-        color[3] = k & 255;
-        color[4] = k >> 8;
-        color[5] = k & 255;
-        fwrite(color, 6, 1, fp);
+        colored_pixels(fp, k, maxiter);
       };
     }
   }
