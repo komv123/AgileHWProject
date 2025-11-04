@@ -5,7 +5,7 @@
 
   Compile the program with:
 
-  gcc -o mandelbrot -O4 mandelbrot.c
+  gcc -o mandelbrot -O4 mand.c
 
   Usage:
  
@@ -58,7 +58,6 @@ void colored_pixels(FILE* fp, int k, uint16_t maxiter){
       }
       else {
         /* Fit to colot palette */
-        /* Fit to color palette */
         unsigned char color[3];
         int segment = 0;
         

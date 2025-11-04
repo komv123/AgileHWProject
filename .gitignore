@@ -9,3 +9,6 @@ test_run_dir
 .scalafmt.conf
 
 Device.sv
+
+c_model/mandelbrot
+c_model/pic.ppm
