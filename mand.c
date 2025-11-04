@@ -57,7 +57,8 @@ int main(int argc, char* argv[])
   const double ymax = ymid + ((zoom / 2) * 0.75);
 
   /* Maximum number of iterations, at most 65535. */
-  const uint16_t maxiter = (unsigned short)atoi(argv[4]);
+  const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 256 ? 256 : (unsigned short)atoi(argv[4]);
+  
 
   /* Image size, 640x480 */
   const int xres = 640;
