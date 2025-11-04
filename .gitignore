@@ -11,4 +11,5 @@ test_run_dir
 Device.sv
 
 c_model/mandelbrot
+c_model/mandelbrot_fixed
 c_model/pic.ppm
