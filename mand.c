@@ -25,7 +25,7 @@
   The resulting pic.png is still gray, but the levels will be nicer. You
   can also add colors, for instance:
 
-  convert -negate -normalize -fill blue -tint 100 pic.ppm pic.png
+  convert -normalize -fill blue -tint 100 pic.ppm pic.png
 
   See http://www.imagemagick.org/Usage/color_mods/ for what ImageMagick
   can do. It can do a lot.
