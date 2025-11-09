@@ -63,7 +63,7 @@ class VideoBuffer(config: Configuration) extends Module{
           stateReg := 1.U 
           burstCounter := 1.U
         } .otherwise {
-          stateReg := 0.U 
+          stateReg := 2.U 
         }
       }
     }
