@@ -24,27 +24,9 @@ object Golomb {
     MixedVecInit(Seq(outValid, outValue))
   }
 
-  private def extract(a: UInt, b: UInt): UInt = {
-  }
 
 
-  def CalcGolomb(quotiant: UInt): (UInt, UInt, Bool) = {
-    /*
-    def recurse(currentValue: UInt, subtractor: UInt, depth: Int, maxDepth: Int): Vec[UInt] = {
-      if (depth == maxDepth) {
-        VecInit(Seq(truncate(currentValue, y)))
-      } else {
-        val nextSubtractor = subtractor >> 1
-        val withSubtraction = recurse(Mux(currentValue >= subtractor, currentValue - subtractor, 0.U), nextSubtractor, depth + 1, maxDepth)
-        val withoutSubtraction = recurse(currentValue, nextSubtractor, depth + 1, maxDepth)
-        
-        VecInit(withoutSubtraction ++ withSubtraction)
-      }
-    }
-  
-    val initialSubtractor = ((x * y) / 2).U
-    recurse(n, initialSubtractor, 0, log2Ceil(x))
-    */
+ def CalcGolomb(quotiant: UInt): (UInt, UInt, Bool) = {
   
     val length = 12 
     val quotiantVec = VecInit((0 until length).map(i => i.U < quotiant))
@@ -64,21 +46,36 @@ object Golomb {
     return (cat, index, indexValid)
   }
 
-  def GenWriteString(quotiant: UInt, remainder: UInt, k: UInt, offset: UInt): (UInt, UInt) = {
+  def GenWriteString(quotient: UInt, remainder: UInt, k: UInt, offset: UInt): (UInt, UInt, Bool) = {
 
     val writeString = Wire(UInt(36.W))
     val writeMask = Wire(UInt(36.W))
 
-    val (cat, index, valid) = CalcGolomb(quotiant)
+    val (cat, index, done) = CalcGolomb(quotient)
 
-    writeString := Cat(cat,remainder) << offset
+    when(done) {
+      // Mask remainder to keep only k bits
+      val remainderMask = (1.U << (k + 1.U)) - 1.U
+      val maskedRemainder = remainder & remainderMask
+      
+      // Combine: shift quotient left by k bits, then OR with masked remainder
+      val combined = (cat << (k + 1.U)) | maskedRemainder
+      
+      writeString := combined << offset
+    }.otherwise {
+      // Only use cat value without remainder concatenation, accounting for offset
+      writeString := cat << offset
+    }
 
-    //fill = (index + k)
-
-    writeMask := Fill(fill, "b1".U) << offset
+    //val fillLength = index + k + 1.U
+    val fillLength = Mux(done, index + k, 11.U)
+    
+    // Create mask with fillLength number of 1's using right shift
+    //writeMask := ~((~0.U(36.W)) << fillLength)
+    writeMask := ((1.U << (fillLength + 1.U)) - 1.U) << offset
 
   
-    return (writeString, writeMask)
+    return (writeString, writeMask, done)
   }
 
 

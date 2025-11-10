@@ -27,7 +27,7 @@ class CompressionTester extends AnyFlatSpec with Matchers with ChiselSim {
 
       })
       
-      val (cat, index, valid) = Golomb.CalcGolomb(io.quotient, io.remainder, io.k)
+      val (cat, index, valid) = Golomb.CalcGolomb(io.quotient)
       io.cat := cat
       io.index.bits := index
       io.index.valid := valid 
@@ -76,6 +76,81 @@ class CompressionTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.index.bits.expect(11.U)
       dut.clock.step()
       
+    }
+  }
+
+  it should "Encode Golomb-rice" in {
+    simulate(new Module {
+      val io = IO(new Bundle {
+        val quotient = Input(UInt(12.W))
+        val remainder = Input(UInt(12.W))
+        val k = Input(UInt(4.W))
+        val offset = Input(UInt(5.W))
+        val writeString = Output(UInt(36.W))
+        val writeMask = Output(UInt(36.W))
+        val done = Output(Bool())
+      })
+
+      val (writeString, writeMask, done) = Golomb.GenWriteString(io.quotient, io.remainder, io.k, io.offset)
+      
+      io.writeString := writeString
+      io.writeMask := writeMask
+      io.done := done 
+    }){ dut =>
+      
+      // Basic functionality
+      dut.io.quotient.poke(3.U)
+      dut.io.remainder.poke(2.U)
+      dut.io.k.poke(2.U)
+      dut.io.offset.poke(0.U)
+      dut.io.writeString.expect("b111010".U)
+      dut.io.writeMask.expect("b111111".U)
+      dut.io.done.expect(true.B)
+      dut.clock.step()
+
+      // Test offset 
+      dut.io.quotient.poke(3.U)
+      dut.io.remainder.poke(2.U)
+      dut.io.k.poke(2.U)
+      dut.io.offset.poke(1.U)
+      dut.io.writeString.expect("b1110100".U)
+      dut.io.writeMask.expect("b1111110".U)
+      dut.io.done.expect(true.B)
+      dut.clock.step()
+
+
+      // Test large quotient 
+      dut.io.quotient.poke(12.U)
+      dut.io.remainder.poke(2.U)
+      dut.io.k.poke(2.U)
+      dut.io.offset.poke(0.U)
+      //dut.io.writeString.expect("b111111111111010".U)
+      //dut.io.writeMask.expect("b111111111111111".U)
+      dut.io.writeString.expect("b111111111111".U)
+      dut.io.writeMask.expect("b111111111111".U)
+      dut.io.done.expect(false.B)
+      dut.clock.step()
+
+      // Test larger quotient 
+      dut.io.quotient.poke(13.U)
+      dut.io.remainder.poke(2.U)
+      dut.io.k.poke(2.U)
+      dut.io.offset.poke(0.U)
+      dut.io.writeString.expect("b111111111111".U)
+      dut.io.writeMask.expect("b111111111111".U)
+      dut.io.done.expect(false.B)
+      dut.clock.step()
+
+      // Test zero quotient 
+      dut.io.quotient.poke(0.U)
+      dut.io.remainder.poke(2.U)
+      dut.io.k.poke(2.U)
+      dut.io.offset.poke(0.U)
+      dut.io.writeString.expect("b010".U)
+      dut.io.writeMask.expect("b111".U)
+      dut.io.done.expect(true.B)
+      dut.clock.step()
+
     }
   }
 }

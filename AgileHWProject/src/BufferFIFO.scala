@@ -3,7 +3,29 @@ package SYS
 import chisel3._
 import chisel3.util._
 
-class BufferFIFO[T <: Data](val size: Int, val dataType: T) extends Module {
+class RegisterMem[T <: Data](val size: Int, val dataType: T) extends Module {
+
+  var pointerwidth = log2Ceil(size - 1)
+
+  val io = IO(new Bundle {
+    val Write = Flipped(Valid(new Bundle{val addr = UInt(pointerwidth.W); val data = dataType.cloneType})) 
+    val Read = Flipped(new Bundle{val addr = Output(UInt(pointerwidth.W)); val data = Input(dataType)})
+  })
+
+  val mem = Reg(Vec(size, dataType))
+
+  val outReg = Reg(dataType)
+
+  when(io.Write.valid){
+    mem(io.Write.bits.addr) := io.Write.bits.data
+  }
+
+  outReg := mem(io.Read.addr)
+  io.Read.data := outReg
+}
+
+
+class BufferFIFO[T <: Data](val size: Int, val dataType: T, val regOnly: Option[Boolean]) extends Module {
   
   val pointerwidth = log2Ceil(size)
   
@@ -23,7 +45,17 @@ class BufferFIFO[T <: Data](val size: Int, val dataType: T) extends Module {
   val empty = Wire(Bool())
   empty := (Head === Tail) && (HeadFlip === TailFlip)
 
-  val Mem = Module(new DualPortRAM(size, dataType))  // updated line
+  /*
+  if(regOnly.isDefined && regOnly == true){
+    val Mem = Module(new RegisterMem(size, dataType))
+  } else {
+    val Mem = Module(new DualPortRAM(size, dataType))
+  }
+  */
+
+  val Mem = Module(new DualPortRAM(size, dataType))
+
+  //val Mem = if(regOnly.isDefined && regOnly == true) Module(new RegisterMem(size, dataType)) else Module(new DualPortRAM(size, dataType))
 
   io.ReadData.response.bits.readData := Mem.io.Read.data 
   io.ReadData.response.valid := false.B
