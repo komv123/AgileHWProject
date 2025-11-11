@@ -16,6 +16,7 @@
           circt
           gtkwave
           python3
+          gnumake
         ];
       in {
         devShells = {
