@@ -36,3 +36,4 @@ trait ChiselModule extends ScalaModule with ScalafmtModule { m =>
 
 object VGA extends ChiselModule { }
 object AgileHWProject extends ChiselModule { }
+object ComputeModule extends ChiselModule { }

@@ -85,15 +85,19 @@ int main(int argc, char* argv[])
   const int64_t ymin = ymid - ((zoom / 2) * 0.75);
   const int64_t ymax = ymid + ((zoom / 2) * 0.75);
 
+  printf("xmin, xmax, ymin, ymax: %ld %ld %ld %ld\n", xmin, xmax, ymin, ymax);
+
   const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 256 ? 256 : (unsigned short)atoi(argv[4]);
   
-  const int xres = 640;
-  const int yres = 480;
+  const int xres = 20;
+  const int yres = 15;
   const char* filename = argv[5];
 
   /* Precompute pixel width and height in fixed-point */
   int64_t dx = (xmax - xmin) / xres;
   int64_t dy = (ymax - ymin) / yres;
+
+   printf("dx, dy: %ld %ld\n", dx, dy);
 
   /* Escape radius squared: 4.0 in fixed-point */
   int64_t escape = double_to_fixed(4.0);
@@ -125,7 +129,7 @@ int main(int argc, char* argv[])
         u2 = fixed_mul(u, u);
         v2 = fixed_mul(v, v);
       }
-      
+      printf("%d ", k);
       /* Compute pixel color and write it to file */
       if (k >= maxiter) {
         const unsigned char black[] = {0, 0, 0};
@@ -135,6 +139,7 @@ int main(int argc, char* argv[])
         colored_pixels(fp, k, maxiter);
       }
     }
+    printf("\n");
   }
   
   fclose(fp);
