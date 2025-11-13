@@ -91,7 +91,7 @@ class CompressionTester extends AnyFlatSpec with Matchers with ChiselSim {
         val done = Output(Bool())
       })
 
-      val (writeString, writeMask, done) = Golomb.GenWriteString(io.quotient, io.remainder, io.k, io.offset)
+      val (writeString, writeMask, done, fill) = Golomb.GenWriteString(io.quotient, io.remainder, io.k, io.offset)
       
       io.writeString := writeString
       io.writeMask := writeMask
@@ -151,6 +151,127 @@ class CompressionTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.done.expect(true.B)
       dut.clock.step()
 
+    }
+  }
+
+  it should "GolombEncode Module Test" in {
+    implicit val c = Configuration.default()
+    
+    simulate(new GolombEncode()) { dut =>
+      
+      // Initialize
+      dut.clock.step()
+
+      dut.io.k_override.valid.poke(true.B)
+      dut.io.k_override.bits.poke(2.U)
+      
+      // Test case 1: Basic encoding with small positive diff
+      dut.io.request.bits.diff.poke(5.S)
+      dut.io.request.valid.poke(true.B)
+      dut.io.out.request.ready.poke(true.B)
+      
+      // Should transition to state 1 and accept input
+      dut.clock.step()
+      dut.io.request.valid.poke(false.B)
+      
+      // Wait for encoding to complete and output to be available
+      var cycles = 0
+      while (!dut.io.out.request.valid.peekBoolean() && cycles < 10) {
+        dut.clock.step()
+        cycles += 1
+      }
+      
+      // Verify output is valid
+      if (dut.io.out.request.valid.peekBoolean()) {
+        println(s"Encoded output: ${dut.io.out.request.bits.data.peek().litValue}")
+      }
+      
+      // Test case 2: Negative diff
+      dut.io.request.bits.diff.poke(-3.S)
+      dut.io.request.valid.poke(true.B)
+      
+      dut.clock.step()
+      dut.io.request.valid.poke(false.B)
+      
+      // Wait for completion
+      cycles = 0
+      while (!dut.io.out.request.valid.peekBoolean() && cycles < 10) {
+        dut.clock.step()
+        cycles += 1
+      }
+      
+      if (dut.io.out.request.valid.peekBoolean()) {
+        println(s"Negative diff encoded output: ${dut.io.out.request.bits.data.peek().litValue}")
+      }
+      
+      // Test case 3: Zero diff
+      dut.io.request.bits.diff.poke(0.S)
+      dut.io.request.valid.poke(true.B)
+      
+      dut.clock.step()
+      dut.io.request.valid.poke(false.B)
+      
+      // Wait for completion
+      cycles = 0
+      while (!dut.io.out.request.valid.peekBoolean() && cycles < 10) {
+        dut.clock.step()
+        cycles += 1
+      }
+      
+      if (dut.io.out.request.valid.peekBoolean()) {
+        println(s"Zero diff encoded output: ${dut.io.out.request.bits.data.peek().litValue}")
+      }
+      
+      // Test case 4: Large positive diff that might trigger wait state
+      dut.io.request.bits.diff.poke(50.S)
+      dut.io.request.valid.poke(true.B)
+      dut.io.out.request.ready.poke(false.B) // Force backpressure
+      
+      dut.clock.step()
+      dut.io.request.valid.poke(false.B)
+      
+      // Step a few cycles with output not ready
+      for (i <- 0 until 5) {
+        dut.clock.step()
+      }
+      
+      // Now allow output
+      dut.io.out.request.ready.poke(true.B)
+      
+      // Wait for completion
+      cycles = 0
+      while (!dut.io.out.request.valid.peekBoolean() && cycles < 15) {
+        dut.clock.step()
+        cycles += 1
+      }
+      
+      if (dut.io.out.request.valid.peekBoolean()) {
+        println(s"Large diff encoded output: ${dut.io.out.request.bits.data.peek().litValue}")
+      }
+      
+      // Test case 5: Sequence of inputs to test state transitions
+      val testSequence = Seq(1.S, -1.S, 2.S, -2.S, 10.S)
+      
+      for (diff <- testSequence) {
+        dut.io.request.bits.diff.poke(diff)
+        dut.io.request.valid.poke(true.B)
+        
+        dut.clock.step()
+        dut.io.request.valid.poke(false.B)
+        
+        // Wait for encoding to complete
+        cycles = 0
+        while (!dut.io.out.request.valid.peekBoolean() && cycles < 10) {
+          dut.clock.step()
+          cycles += 1
+        }
+        
+        if (dut.io.out.request.valid.peekBoolean()) {
+          println(s"Sequence diff ${diff} encoded output: ${dut.io.out.request.bits.data.peek().litValue}")
+        }
+      }
+      
+      dut.clock.step(10)
     }
   }
 }
