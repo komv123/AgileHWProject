@@ -3,6 +3,7 @@ package Compression
 import chisel3._
 import chisel3.util._
 
+import Common.BufferFIFO
 
 class Compression(config: Configuration) extends Module{
 //class Compression() extends Module{

@@ -34,5 +34,20 @@ trait ChiselModule extends ScalaModule with ScalafmtModule { m =>
   }
 }
 
-object VGA extends ChiselModule { }
-object AgileHWProject extends ChiselModule { }
+object Common extends ChiselModule { }
+
+object Compression extends ChiselModule {
+  override def moduleDeps = Seq(Common)
+}
+
+object MMU extends ChiselModule {
+  override def moduleDeps = Seq(Common)
+}
+
+object VGA extends ChiselModule {
+  override def moduleDeps = Seq(Common)
+}
+
+object VideoBuffer extends ChiselModule {
+  override def moduleDeps = Seq(Common, Compression, MMU)
+}

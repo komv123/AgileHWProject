@@ -160,11 +160,18 @@ class GolombEncode(implicit c: Configuration) extends Module {
       val quotient = (unsignedDiff >> kReg) 
       val remainder = (unsignedDiff & ((1.U << kReg) - 1.U))
 
+      /*
       when(io.k_override.valid){
-        val (writeString, writeMask, done, fill) = Golomb.GenWriteString(quotient, remainder, k_override.bits, headReg)
+        val (writeString, writeMask, done, fill) = Golomb.GenWriteString(quotient, remainder, io.k_override.bits, headReg)
       } .otherwise {
         val (writeString, writeMask, done, fill) = Golomb.GenWriteString(quotient, remainder, kReg, headReg)
       }
+      */
+
+      val k = Mux(io.k_override.valid, io.k_override.bits , kReg)
+
+      val (writeString, writeMask, done, fill) = Golomb.GenWriteString(quotient, remainder, k, headReg)
+
 
 
       // Perform write onto buffer
