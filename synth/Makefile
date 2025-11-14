@@ -1,11 +1,14 @@
-THIS_FILE := $(lastword $(MAKEFILE_LIST))
+-include boards/nexys-a7-100t.mk
+
+THIS_FILE := $(firstword $(MAKEFILE_LIST))
 
 TARGET      := $(BOARD)
 FPGA_FAM    := xc7
 current_dir := ${CURDIR}
-XDC         := $(current_dir)/boards/$(TARGET).xdc
+XDC         := ${CURDIR}/boards/Nexys-A7-100T-Master.xdc
 TOP         := $(TOPMOD)
 SOURCES     := $(RTLFILE)
+PART = xc7a100t-1csg324
 
 .ONESHELL:
 SHELL = bash

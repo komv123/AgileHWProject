@@ -9,5 +9,9 @@ test_run_dir
 .scalafmt.conf
 /f4pga/tools/
 /f4pga/f4pga-examples/
+.DS_Store
+build/
+rtl/
+synth/build/
 
 Device.sv
