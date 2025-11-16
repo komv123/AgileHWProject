@@ -10,6 +10,8 @@ class CompMod extends Module {
         val zoom        = Input(SInt(64.W))
         val maxiter     = Input(UInt(16.W))
         val new_params  = Input(Bool())
+        
+        val ready = Input(Bool())
 
         val k_out       = Output(UInt(32.W))
         val valid       = Output(Bool())
@@ -29,10 +31,8 @@ class CompMod extends Module {
     val v_smth = 8589934592L.S
 
     /* Resolution */
-    val xres = 20.S
-    val yres = 15.S
-
-    /* Variable Declarations */
+    val xres = 320.S
+    val yres = 240.S
     
     /* Register declarations */
     val xmid    = RegInit(0.S(64.W)) //(-3335440880L.S(64.W))
@@ -116,12 +116,18 @@ class CompMod extends Module {
             u2 := 0.S
             v2 := 0.S
             
-            k := 1.U
-            valid := 0.B
+            val k_next = 1.U
+            val valid_next = 0.B
 
-            i := i + 1.S
+            val i_next = i + 1.S
 
-            when (i < xres) {stateReg := ITERATE}
+            when (i < xres) {
+                when (io.ready){
+                i := i_next
+                k := k_next
+                valid := valid_next
+
+                stateReg := ITERATE}}
             .otherwise {stateReg := YLOOP}
         }
 

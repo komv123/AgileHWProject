@@ -2,13 +2,13 @@
   Fixed-point integer version of Mandelbrot set visualizer
   
   Compile with:
-  gcc -o mandelbrot_fixed -O4 mand_fixed.c
+  gcc -o 4mandelbrot_fixed -O4 mand_4bit_fixed.c
 
   Usage:
-  ./mandelbrot_fixed <xmid> <ymid> <zoom> <maxiter> <out.ppm>
+  ./4mandelbrot_fixed <xmid> <ymid> <zoom> <maxiter> <out.ppm>
 
   Example:
-  ./mandelbrot_fixed -1.34 0.0 2.0 65535 pic.ppm
+  ./4mandelbrot_fixed -1.34 0.0 2.0 65535 pic.ppm
 */
 
 #include <stdio.h>
@@ -21,9 +21,11 @@
 #define FIXED_ONE (1LL << FRAC_BITS)
 #define PRINT 0
 
-const uint8_t Red[5]    = {0, 32, 237, 255, 0};
-const uint8_t Green[5]  = {7, 107, 255, 170, 2};
-const uint8_t Blue[5]   = {100, 203, 255, 0, 0};
+uint32_t k_count = 0;
+
+const uint8_t Red[5]    = {0, 2, 14, 15, 0};
+const uint8_t Green[5]  = {0, 6, 15, 10, 0};
+const uint8_t Blue[5]   = {6, 12, 15, 0, 0};
 
 // Convert double to fixed-point
 int64_t double_to_fixed(double d) {
@@ -62,6 +64,15 @@ void colored_pixels(FILE* fp, int k, uint16_t maxiter){
     color[0] = Red[segment] + ((offset * (Red[segment+1] - Red[segment]) * 256) / range) / 256;
     color[1] = Green[segment] + ((offset * (Green[segment+1] - Green[segment]) * 256) / range) / 256;
     color[2] = Blue[segment] + ((offset * (Blue[segment+1] - Blue[segment]) * 256) / range) / 256;
+
+    if(PRINT){
+      uint16_t rgb = ((color[0] << 8) & 0xF00) | ((color[1] << 4) & 0x0F0) | (color[2] & 0x00F);
+      printf("%03x ", rgb);
+    }
+
+    color[0] = color[0] * 17;
+    color[1] = color[1] * 17;
+    color[2] = color[2] * 17;
     
     fwrite(color, 3, 1, fp);
   }
@@ -92,8 +103,8 @@ int main(int argc, char* argv[])
 
   const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 256 ? 256 : (unsigned short)atoi(argv[4]);
   
-  const int xres = 640;
-  const int yres = 480;
+  const int xres = 320;
+  const int yres = 240;
   const char* filename = argv[5];
 
   /* Precompute pixel width and height in fixed-point */
@@ -131,6 +142,7 @@ int main(int argc, char* argv[])
         u = u2 - v2 + x;
         u2 = fixed_mul(u, u);
         v2 = fixed_mul(v, v);
+        k_count++;
       }
       if(PRINT){printf("%d ", k);}
       /* Compute pixel color and write it to file */
@@ -144,6 +156,7 @@ int main(int argc, char* argv[])
     }
     if(PRINT){printf("\n");}
   }
+  printf("k_count: %d\n", k_count);
   
   fclose(fp);
   return 0;
