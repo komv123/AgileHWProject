@@ -1,39 +1,82 @@
 package vga
 
 import chisel3._
+import chisel3.util.{Counter, log2Ceil}
 
-class VGAController(freq: Int) extends Module {
+case class VGAConfig (
+  horizontalPixels: Int,
+  horizontalFrontPorch: Int,
+  horizontalSyncPulse: Int,
+  horizontalBackPorch: Int,
+  verticalPixels: Int,
+  verticalFrontPorch: Int,
+  verticalSyncPulse: Int,
+  verticalBackPorch: Int,
+)
+
+object VGAConfig {
+  val vga640x480at60Hz = VGAConfig(640, 16, 96, 48, 480, 10, 2, 33)
+}
+
+class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) extends Module {
+  val displayTime = pixels
+  val frontPorchTime = displayTime + frontPorch
+  val syncPulseTime = frontPorchTime + syncPulse
+  val backPorchTime = syncPulseTime + backPorch
+
   val io = IO(new Bundle{
-    val Rin, Gin, Bin = Input(UInt(4.W))
-    val hSync, vSync = Output(Bool())
-    val R, G, B = Output(UInt(4.W))
-    val horCntr, verCntr = Output(UInt(10.W))
+    val counterEnable = Input(Bool())
+    val counter = Output(UInt((log2Ceil(backPorchTime - 1)).W))
+    val display, frontPorch, syncPulse, backPorch, wrap = Output(Bool())
   })
 
-  val clkDiv = Module(new ClockDivider(25000000, freq)) // 25MHz clock
-  val horCntr = Module(new HorizontalCounter) // Horizontal
-  val verCntr = Module(new VerticalCounter) // Vertical
+  val (counter, wrap) = Counter(io.counterEnable, backPorchTime - 1)
 
-  // Clocks
-  horCntr.io.pxlCLK := clkDiv.io.tick
-  verCntr.io.enVCnt := horCntr.io.enVCnt
+  io.display := counter < displayTime.U
+  io.frontPorch := counter >= displayTime.U && counter < frontPorchTime.U
+  io.syncPulse := counter >= frontPorchTime.U && counter < syncPulseTime.U
+  io.backPorch := counter >= syncPulseTime.U && counter < backPorchTime.U
+  io.counter := counter
+  io.wrap := wrap
+}
 
-  // Display only in display time
-  when(horCntr.io.dispTime && verCntr.io.dispTime){
-    io.R := io.Rin
-    io.G := io.Gin
-    io.B := io.Bin
-  }. otherwise{
-    io.R := 0.U
-    io.G := 0.U
-    io.B := 0.U
-  }
+class VGAController(config: VGAConfig) extends Module {
+  val io = IO(new Bundle{
+    val Rin, Gin, Bin = Input(UInt(4.W))
+    val horizontalSyncPulse, verticalSyncPulse = Output(Bool())
+    val R, G, B = Output(UInt(4.W))
+    val horizontalCounter, verticalCounter = Output(UInt(10.W)) // TODO: Set width
+  })
+
+  val pixelClock = Module(new ClockDivider(25000000, 100000000)) // 25MHz clock
+
+  val horizontalCounter = Module(new VGACounter(
+    config.horizontalPixels,
+    config.horizontalFrontPorch,
+    config.horizontalSyncPulse,
+    config.horizontalBackPorch
+  ))
+
+  horizontalCounter.io.counterEnable := pixelClock.io.tick
+
+  val verticalCounter = Module(new VGACounter(
+    config.verticalPixels,
+    config.verticalFrontPorch,
+    config.verticalSyncPulse,
+    config.verticalBackPorch
+  ))
+
+  verticalCounter.io.counterEnable := horizontalCounter.io.wrap
+
+  io.R := io.Rin
+  io.G := io.Gin
+  io.B := io.Bin
 
   // Sync outputs
-  io.hSync := horCntr.io.horSync
-  io.vSync := verCntr.io.verSync
+  io.horizontalSyncPulse := horizontalCounter.io.syncPulse
+  io.verticalSyncPulse := verticalCounter.io.syncPulse
 
-  //Counters ouput
-  io.horCntr := horCntr.io.horCnt
-  io.verCntr := verCntr.io.verCnt
+  // Counters output
+  io.horizontalCounter := horizontalCounter.io.counter
+  io.verticalCounter := verticalCounter.io.counter
 }
