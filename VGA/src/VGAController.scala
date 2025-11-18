@@ -27,29 +27,23 @@ class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) e
 
   val io = IO(new Bundle{
     val counterEnable = Input(Bool())
-    val counter = Output(UInt((log2Ceil(backPorchTime - 1)).W))
-    val display, frontPorch, syncPulse, backPorch, wrap = Output(Bool())
+    val blank, syncPulse, wrap  = Output(Bool())
   })
 
   val (counter, wrap) = Counter(io.counterEnable, backPorchTime - 1)
 
-  io.display := counter < displayTime.U
-  io.frontPorch := counter >= displayTime.U && counter < frontPorchTime.U
-  io.syncPulse := counter >= frontPorchTime.U && counter < syncPulseTime.U
-  io.backPorch := counter >= syncPulseTime.U && counter < backPorchTime.U
-  io.counter := counter
+  io.blank := counter >= displayTime.U
+  io.syncPulse := !(counter >= frontPorchTime.U && counter < syncPulseTime.U)
   io.wrap := wrap
 }
 
 class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
   val io = IO(new Bundle{
-    val Rin, Gin, Bin = Input(UInt(4.W))
-    val horizontalSyncPulse, verticalSyncPulse = Output(Bool())
-    val R, G, B = Output(UInt(4.W))
-    val horizontalCounter, verticalCounter = Output(UInt(10.W)) // TODO: Set width
+    val horizontalSyncPulse, verticalSyncPulse, blank, pixelClock = Output(Bool())
   })
 
-  val (_, pixelClock) = Counter(true.B, config.pixelFrequency / clockFrequency)
+  val (_, pixelClock) = Counter(true.B, clockFrequency / config.pixelFrequency)
+  io.pixelClock := pixelClock
 
   val horizontalCounter = Module(new VGACounter(
     config.horizontalPixels,
@@ -69,15 +63,8 @@ class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
 
   verticalCounter.io.counterEnable := horizontalCounter.io.wrap
 
-  io.R := io.Rin
-  io.G := io.Gin
-  io.B := io.Bin
-
-  // Sync outputs
   io.horizontalSyncPulse := horizontalCounter.io.syncPulse
   io.verticalSyncPulse := verticalCounter.io.syncPulse
 
-  // Counters output
-  io.horizontalCounter := horizontalCounter.io.counter
-  io.verticalCounter := verticalCounter.io.counter
+  io.blank := horizontalCounter.io.blank || verticalCounter.io.blank
 }
