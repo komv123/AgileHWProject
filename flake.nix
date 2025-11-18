@@ -14,6 +14,7 @@
           mill
           verilator
           circt
+          gtkwave
           python3
         ];
       in {
