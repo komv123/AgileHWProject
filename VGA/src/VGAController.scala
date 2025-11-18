@@ -48,7 +48,7 @@ class VGAController(config: VGAConfig) extends Module {
     val horizontalCounter, verticalCounter = Output(UInt(10.W)) // TODO: Set width
   })
 
-  val pixelClock = Module(new ClockDivider(25000000, 100000000)) // 25MHz clock
+  val (_, pixelClock) = Counter(true.B, 25000000 / 100000000)
 
   val horizontalCounter = Module(new VGACounter(
     config.horizontalPixels,
@@ -57,7 +57,7 @@ class VGAController(config: VGAConfig) extends Module {
     config.horizontalBackPorch
   ))
 
-  horizontalCounter.io.counterEnable := pixelClock.io.tick
+  horizontalCounter.io.counterEnable := pixelClock
 
   val verticalCounter = Module(new VGACounter(
     config.verticalPixels,
