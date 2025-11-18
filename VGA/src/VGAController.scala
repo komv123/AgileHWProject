@@ -12,10 +12,11 @@ case class VGAConfig (
   verticalFrontPorch: Int,
   verticalSyncPulse: Int,
   verticalBackPorch: Int,
+  pixelFrequency: Int,
 )
 
 object VGAConfig {
-  val vga640x480at60Hz = VGAConfig(640, 16, 96, 48, 480, 10, 2, 33)
+  val vga640x480at60Hz = VGAConfig(640, 16, 96, 48, 480, 10, 2, 33, 25000000)
 }
 
 class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) extends Module {
@@ -40,7 +41,7 @@ class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) e
   io.wrap := wrap
 }
 
-class VGAController(config: VGAConfig) extends Module {
+class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
   val io = IO(new Bundle{
     val Rin, Gin, Bin = Input(UInt(4.W))
     val horizontalSyncPulse, verticalSyncPulse = Output(Bool())
@@ -48,7 +49,7 @@ class VGAController(config: VGAConfig) extends Module {
     val horizontalCounter, verticalCounter = Output(UInt(10.W)) // TODO: Set width
   })
 
-  val (_, pixelClock) = Counter(true.B, 25000000 / 100000000)
+  val (_, pixelClock) = Counter(true.B, config.pixelFrequency / clockFrequency)
 
   val horizontalCounter = Module(new VGACounter(
     config.horizontalPixels,

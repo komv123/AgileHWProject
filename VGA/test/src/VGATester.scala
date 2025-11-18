@@ -12,11 +12,13 @@ import javax.imageio.ImageIO
 
 class VGATester extends AnyFlatSpec with Matchers with ChiselSim {
   "VGA" should "pass" in {
-    simulate(new VGAController(VGAConfig.vga640x480at60Hz)) { dut =>
-      dut.clock.step(100000000)
+    val clockFrequency = 50000000
+    val config = VGAConfig.vga640x480at60Hz
+    simulate(new VGAController(config, clockFrequency)) { dut =>
+      dut.clock.step(clockFrequency)
     }
     // create an image
-    val canvas = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB)
+    val canvas = new BufferedImage(config.horizontalPixels, config.verticalPixels, BufferedImage.TYPE_INT_ARGB)
     for (i <- 0 until canvas.getWidth()) {
       for (j <- 0 until canvas.getHeight()) {
         canvas.setRGB(i, j, 0xFF0000FF)
