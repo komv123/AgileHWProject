@@ -6,6 +6,7 @@ out
 target
 project
 test_run_dir
+build
 .scalafmt.conf
 
 Device.sv
