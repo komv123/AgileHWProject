@@ -67,8 +67,9 @@ class VideoBufferTester extends AnyFlatSpec with Matchers with ChiselSim {
 
       /////// Pop from the buffer ///////
       
-      dut.io.VGA.RGB.expect(randInt.asUInt(12.W))
-      dut.io.request.poke(true.B)
+      dut.io.ReadData.request.bits.addr.poke(0.U)
+      dut.io.ReadData.request.valid.poke(true.B)
+      dut.io.ReadData.response.bits.readData.expect(randInt.asUInt(12.W))
 
       dut.clock.step(1)
     }
@@ -129,8 +130,10 @@ class VideoBufferTester extends AnyFlatSpec with Matchers with ChiselSim {
       /////// Pop from the buffer ///////
       
       for (i <- 0 until numWords) {
-        dut.io.VGA.RGB.expect(randInt(i).asUInt(12.W))
-        dut.io.request.poke(true.B)
+        dut.io.ReadData.request.bits.addr.poke(i.U)
+        dut.io.ReadData.request.ready.expect(true.B)
+        dut.io.ReadData.request.valid.poke(true.B)
+        dut.io.ReadData.response.bits.readData.expect(randInt(i).asUInt(12.W))
 
         dut.clock.step(1)
 			}
