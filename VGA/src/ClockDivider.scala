@@ -1,6 +1,8 @@
+package vga
+
 import chisel3._
 
-class ClockDivider(n: Int, freq: Int) extends Module{
+class ClockDivider(n: Int, freq: Int) extends Module {
     val io = IO(new Bundle{
         val tick = Output(Bool())
     })
