@@ -3,14 +3,17 @@ package VideoBuffer
 import chisel3._
 import chisel3.util._
 
+import Common._
+
+
 //class VideoBuffer(implicit c: Configuration) extends Module{
 class VideoBuffer(config: Configuration) extends Module{
-  implicit val c = config
+  implicit val c: Configuration = config
 
   val io = IO(new Bundle{
-    val VGA = new interfaceVGA
+    val VGA = new interfaceVGA()(c)
     val request = Input(Bool())
-    val tilelink = Flipped(new Tilelink)
+    val tilelink = Flipped(new Tilelink()(c))
   })
 
   val pointerwidth = log2Ceil(c.bufferSize)

@@ -9,6 +9,8 @@ import chisel3.simulator.scalatest.HasCliOptions.CliOption
 
 import scala.util.Random
 
+import Common.Configuration
+
 
 class VideoBufferTester extends AnyFlatSpec with Matchers with ChiselSim {
   behavior of "VideoBuffer"
