@@ -15,7 +15,30 @@ class VGATester extends AnyFlatSpec with Matchers with ChiselSim {
     val clockFrequency = 50000000
     val config = VGAConfig.vga640x480at60Hz
     simulate(new VGAController(config, clockFrequency)) { dut =>
-      dut.clock.step(clockFrequency)
+
+      def testHorizontalPeriod(pixels: Int, blank: Boolean, syncPulse: Boolean) = {
+        for (i <- 0 until pixels) {
+          dut.io.horizontalBlank.expect(blank.B)
+          dut.io.horizontalSyncPulse.expect(syncPulse.B)
+          dut.clock.step(clockFrequency / config.pixelFrequency)
+        }
+      }
+
+      def testVerticalPeriod(lines: Int, blank: Boolean, syncPulse: Boolean) = {
+        for (i <- 0 until lines) {
+          dut.io.verticalBlank.expect(blank.B)
+          dut.io.verticalSyncPulse.expect(syncPulse.B)
+          testHorizontalPeriod(config.horizontalPixels, false, true)
+          testHorizontalPeriod(config.horizontalFrontPorch, true, true)
+          testHorizontalPeriod(config.horizontalSyncPulse, true, false)
+          testHorizontalPeriod(config.horizontalBackPorch, true, true)
+        }
+      }
+
+      testVerticalPeriod(config.verticalPixels, false, true)
+      testVerticalPeriod(config.verticalFrontPorch, true, true)
+      testVerticalPeriod(config.verticalSyncPulse, true, false)
+      testVerticalPeriod(config.verticalBackPorch, true, true)
     }
     // create an image
     val canvas = new BufferedImage(config.horizontalPixels, config.verticalPixels, BufferedImage.TYPE_INT_ARGB)

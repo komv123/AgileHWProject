@@ -25,12 +25,12 @@ class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) e
   val syncPulseTime = frontPorchTime + syncPulse
   val backPorchTime = syncPulseTime + backPorch
 
-  val io = IO(new Bundle{
+  val io = IO(new Bundle {
     val counterEnable = Input(Bool())
     val blank, syncPulse, wrap  = Output(Bool())
   })
 
-  val (counter, wrap) = Counter(io.counterEnable, backPorchTime - 1)
+  val (counter, wrap) = Counter(io.counterEnable, backPorchTime)
 
   io.blank := counter >= displayTime.U
   io.syncPulse := !(counter >= frontPorchTime.U && counter < syncPulseTime.U)
@@ -38,8 +38,8 @@ class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) e
 }
 
 class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
-  val io = IO(new Bundle{
-    val horizontalSyncPulse, verticalSyncPulse, blank, pixelClock = Output(Bool())
+  val io = IO(new Bundle {
+    val horizontalSyncPulse, verticalSyncPulse, horizontalBlank, verticalBlank, pixelClock = Output(Bool())
   })
 
   val (_, pixelClock) = Counter(true.B, clockFrequency / config.pixelFrequency)
@@ -66,5 +66,6 @@ class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
   io.horizontalSyncPulse := horizontalCounter.io.syncPulse
   io.verticalSyncPulse := verticalCounter.io.syncPulse
 
-  io.blank := horizontalCounter.io.blank || verticalCounter.io.blank
+  io.horizontalBlank := horizontalCounter.io.blank
+  io.verticalBlank := verticalCounter.io.blank
 }
