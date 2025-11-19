@@ -3,20 +3,25 @@ package vga
 import chisel3._
 import chisel3.util.{Counter, log2Ceil}
 
+case class VGATiming (
+  pixels: Int,
+  frontPorch: Int,
+  syncPulse: Int,
+  backPorch: Int,
+)
+
 case class VGAConfig (
-  horizontalPixels: Int,
-  horizontalFrontPorch: Int,
-  horizontalSyncPulse: Int,
-  horizontalBackPorch: Int,
-  verticalPixels: Int,
-  verticalFrontPorch: Int,
-  verticalSyncPulse: Int,
-  verticalBackPorch: Int,
+  horizontal: VGATiming,
+  vertical: VGATiming,
   pixelFrequency: Int,
 )
 
 object VGAConfig {
-  val vga640x480at60Hz = VGAConfig(640, 16, 96, 48, 480, 10, 2, 33, 25000000)
+  val vga640x480at60Hz = VGAConfig(
+    VGATiming(640, 16, 96, 48),
+    VGATiming(480, 10, 2, 33),
+    25000000
+  )
 }
 
 class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) extends Module {
@@ -37,6 +42,12 @@ class VGACounter(pixels: Int, frontPorch: Int, syncPulse: Int, backPorch: Int) e
   io.wrap := wrap
 }
 
+object VGACounter {
+  def apply(c: VGATiming) =  {
+    Module(new VGACounter(c.pixels, c.frontPorch, c.syncPulse, c.backPorch))
+  }
+}
+
 class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
   val io = IO(new Bundle {
     val horizontalSyncPulse, verticalSyncPulse, horizontalBlank, verticalBlank, pixelClock = Output(Bool())
@@ -45,21 +56,11 @@ class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
   val (_, pixelClock) = Counter(true.B, clockFrequency / config.pixelFrequency)
   io.pixelClock := pixelClock
 
-  val horizontalCounter = Module(new VGACounter(
-    config.horizontalPixels,
-    config.horizontalFrontPorch,
-    config.horizontalSyncPulse,
-    config.horizontalBackPorch
-  ))
+  val horizontalCounter = VGACounter(config.horizontal)
 
   horizontalCounter.io.counterEnable := pixelClock
 
-  val verticalCounter = Module(new VGACounter(
-    config.verticalPixels,
-    config.verticalFrontPorch,
-    config.verticalSyncPulse,
-    config.verticalBackPorch
-  ))
+  val verticalCounter = VGACounter(config.vertical)
 
   verticalCounter.io.counterEnable := horizontalCounter.io.wrap
 

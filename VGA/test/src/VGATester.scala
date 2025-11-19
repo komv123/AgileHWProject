@@ -28,20 +28,20 @@ class VGATester extends AnyFlatSpec with Matchers with ChiselSim {
         for (i <- 0 until lines) {
           dut.io.verticalBlank.expect(blank.B)
           dut.io.verticalSyncPulse.expect(syncPulse.B)
-          testHorizontalPeriod(config.horizontalPixels, false, true)
-          testHorizontalPeriod(config.horizontalFrontPorch, true, true)
-          testHorizontalPeriod(config.horizontalSyncPulse, true, false)
-          testHorizontalPeriod(config.horizontalBackPorch, true, true)
+          testHorizontalPeriod(config.horizontal.pixels, false, true)
+          testHorizontalPeriod(config.horizontal.frontPorch, true, true)
+          testHorizontalPeriod(config.horizontal.syncPulse, true, false)
+          testHorizontalPeriod(config.horizontal.backPorch, true, true)
         }
       }
 
-      testVerticalPeriod(config.verticalPixels, false, true)
-      testVerticalPeriod(config.verticalFrontPorch, true, true)
-      testVerticalPeriod(config.verticalSyncPulse, true, false)
-      testVerticalPeriod(config.verticalBackPorch, true, true)
+      testVerticalPeriod(config.vertical.pixels, false, true)
+      testVerticalPeriod(config.vertical.frontPorch, true, true)
+      testVerticalPeriod(config.vertical.syncPulse, true, false)
+      testVerticalPeriod(config.vertical.backPorch, true, true)
     }
     // create an image
-    val canvas = new BufferedImage(config.horizontalPixels, config.verticalPixels, BufferedImage.TYPE_INT_ARGB)
+    val canvas = new BufferedImage(config.horizontal.pixels, config.vertical.pixels, BufferedImage.TYPE_INT_ARGB)
     for (i <- 0 until canvas.getWidth()) {
       for (j <- 0 until canvas.getHeight()) {
         canvas.setRGB(i, j, 0xFF0000FF)
