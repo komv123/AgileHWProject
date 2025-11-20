@@ -10,16 +10,20 @@ import Common._
 class VideoBuffer(config: Configuration) extends Module{
   implicit val c: Configuration = config
 
+  val pointerwidth = log2Ceil(c.bufferSize)
+
   val io = IO(new Bundle{
-    val VGA = new interfaceVGA()(c)
-    val request = Input(Bool())
+    val ReadData = Flipped(new Readport(UInt(12.W), pointerwidth))
     val tilelink = Flipped(new Tilelink()(c))
   })
 
-  val pointerwidth = log2Ceil(c.bufferSize)
-
   val Tail = RegInit(0.U(pointerwidth.W))
-  val Mem = Module(new DualPortRAM(c.bufferSize, UInt(12.W)))  // updated line
+  val TailFlip = RegInit(0.U(1.W))
+  val Mem = Module(new DualPortRAM(c.bufferSize, UInt(12.W)))
+  
+  val empty = Wire(Bool())
+  empty := false.B  // For now, simplified - VideoBuffer doesn't track empty state like FIFO
+  val size = c.bufferSize
 
 
   val stateReg = RegInit(0.U(4.W))
@@ -32,23 +36,32 @@ class VideoBuffer(config: Configuration) extends Module{
 
   io.tilelink.d.bits := DontCare
 
-  Mem.io.Read.addr := Tail
-  io.VGA.RGB := Mem.io.Read.data 
+  Mem.io.Read.addr := Tail 
 
   Mem.io.Write.valid := false.B
   Mem.io.Write.bits.addr := 0.U 
   Mem.io.Write.bits.data := 0.U 
 
 
-  when(io.request){
-    when(Tail === (c.bufferSize.U - 1.U)){
+  io.ReadData.response.bits.readData := Mem.io.Read.data 
+  io.ReadData.response.valid := false.B
+
+  io.ReadData.request.ready := !empty
+
+  Mem.io.Read.addr := Tail
+  
+  when(io.ReadData.request.valid){
+
+    when(Tail === (size.U - 1.U)){
       Tail := 0.U
       Mem.io.Read.addr := 0.U
-      //TailFlip := ~TailFlip
+      TailFlip := ~TailFlip
     }.otherwise{
       Tail := Tail + 1.U
       Mem.io.Read.addr := Tail + 1.U // FIXME: Might be a little dangerous in terms of combinational delays 
     }
+
+    io.ReadData.response.valid := true.B
   }
 
   switch(stateReg){ // Start write transaction  
