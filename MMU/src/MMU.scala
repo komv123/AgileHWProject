@@ -44,7 +44,7 @@ object MMU {
   
   
   def translateAddress(virtualAddr: UInt, framePointer : UInt, bufferPointer : UInt)(implicit config: Configuration): UInt = {
-    val diff = Mux((virtualAddr - framePointer) >= 0.U, virtualAddr - framePointer, ((framePointer + virtualAddr) - config.frameSize.U)) 
+    val diff = Mux((virtualAddr - framePointer).asSInt >= 0.S, virtualAddr - framePointer, ((virtualAddr + (config.frameSize.U - framePointer)))) 
     val addr = Mux(bufferPointer + diff > config.bufferSize.U, bufferPointer + diff - config.bufferSize.U, bufferPointer + diff)
     addr
   }
@@ -56,7 +56,7 @@ class MMU(implicit config: Configuration) extends Module{
     val tilelink_in = Flipped(new Tilelink()(config))
     val tilelink_out = new Tilelink()(config)
     val bufferPointer = Input(UInt(log2Ceil(config.bufferSize).W))
-    val framePointer = Input(UInt(20.W))
+    val framePointer = Input(UInt(24.W))
   })
 
   // Direct connection of tilelink interfaces

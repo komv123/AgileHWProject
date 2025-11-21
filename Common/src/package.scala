@@ -7,11 +7,12 @@ package object Common {
     bufferSize: Int,
     frameSize: Int,
     bufferWidth: Int, 
-    sourceCount: Int
+    sourceWidth: Int
   ){
     val busWidth = 8 * bufferWidth
     val maskWidth = bufferWidth
-    val addrWidth = log2Ceil(bufferSize)
+    //val addrWidth = log2Ceil(bufferSize)
+    val addrWidth = 24 
   }
 
   object Configuration {
@@ -19,8 +20,8 @@ package object Common {
       Configuration(
         1028, // bufferSize
         307200, // frameSize
-        3, // bufferWidth 3 bytes
-        10 // sourceCount
+        2, // bufferWidth 2 bytes
+        8 // sourceWidth
       )
     }
   }

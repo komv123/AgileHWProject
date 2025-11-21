@@ -28,7 +28,7 @@ class VideoBuffer(config: Configuration) extends Module{
 
   val stateReg = RegInit(0.U(4.W))
   val burstCounter = RegInit(0.U(24.W)) // Counts to a.size
-  val sourceReg = RegInit(0.U(log2Ceil(c.sourceCount).W))
+  val sourceReg = RegInit(0.U(c.sourceWidth.W))
 
 
   io.tilelink.a.ready := true.B 
