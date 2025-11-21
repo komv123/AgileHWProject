@@ -8,7 +8,7 @@ class Tilelink_A(implicit c: Configuration = defaultConfig) extends Bundle {
   val opcode = UInt(3.W)
   val param = UInt(3.W)
   val size = UInt(24.W) // Max burst = 2 ^ 24 words = 16777216
-  val source = UInt(log2Ceil(c.sourceCount).W)
+  val source = UInt(c.sourceWidth.W)
   val address = UInt(c.addrWidth.W)
   val mask = UInt(c.maskWidth.W)
   val data = UInt(c.busWidth.W)
@@ -19,8 +19,8 @@ class Tilelink_D(implicit c: Configuration = defaultConfig) extends Bundle {
   val opcode = UInt(3.W)
   val param = UInt(2.W)
   val size = UInt(24.W) // Max burst = 2 ^ 24 words = 16777216
-  val source = UInt(log2Ceil(c.sourceCount).W)
-  val sink = UInt(log2Ceil(c.sourceCount).W)
+  val source = UInt(c.sourceWidth.W)
+  val sink = UInt(c.sourceWidth.W)
   val denied = UInt(1.W)
   val data = UInt(c.busWidth.W)
   val corrupt = UInt(1.W)

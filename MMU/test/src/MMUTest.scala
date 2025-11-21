@@ -36,8 +36,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.bits.address.poke(virtualAddr.U)
       dut.io.tilelink_in.a.bits.size.poke(0.U) // Single beat
       dut.io.tilelink_in.a.bits.source.poke(1.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xDEADBE.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xDEAD.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -74,8 +75,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.bits.address.poke(virtualAddr.U)
       dut.io.tilelink_in.a.bits.size.poke(0.U) // Single beat
       dut.io.tilelink_in.a.bits.source.poke(1.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xDEADBE.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xDEAD.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -113,8 +115,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       //dut.io.tilelink_in.a.bits.size.poke(0.U) // Single beat
       dut.io.tilelink_in.a.bits.size.poke(size.U) // Burst 
       dut.io.tilelink_in.a.bits.source.poke(1.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xDEADBE.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xDEAD.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -152,8 +155,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       //dut.io.tilelink_in.a.bits.size.poke(0.U) // Single beat
       dut.io.tilelink_in.a.bits.size.poke(size.U) // Burst 
       dut.io.tilelink_in.a.bits.source.poke(1.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xDEADBE.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xDEAD.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -192,8 +196,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       //dut.io.tilelink_in.a.bits.size.poke(0.U) // Single beat
       dut.io.tilelink_in.a.bits.size.poke(size.U) // Burst 
       dut.io.tilelink_in.a.bits.source.poke(1.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xDEADBE.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xDEAD.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -232,8 +237,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.bits.address.poke(virtualAddr.U)
       dut.io.tilelink_in.a.bits.size.poke(burstSize.U)
       dut.io.tilelink_in.a.bits.source.poke(2.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xCAFEBA.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xCAFE.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -271,8 +277,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.bits.address.poke(virtualAddr.U)
       dut.io.tilelink_in.a.bits.size.poke(burstSize.U)
       dut.io.tilelink_in.a.bits.source.poke(2.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xCAFEBA.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xCAFE.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -308,8 +315,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.bits.address.poke(virtualAddr.U)
       dut.io.tilelink_in.a.bits.size.poke(0.U)
       dut.io.tilelink_in.a.bits.source.poke(1.U)
-      dut.io.tilelink_in.a.bits.data.poke(0x123456.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0x1234.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -345,8 +353,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.bits.address.poke(virtualAddr.U)
       dut.io.tilelink_in.a.bits.size.poke(0.U)
       dut.io.tilelink_in.a.bits.source.poke(1.U)
-      dut.io.tilelink_in.a.bits.data.poke(0x123456.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0x1234.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -387,8 +396,9 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.bits.address.poke(virtualAddr.U)
       dut.io.tilelink_in.a.bits.size.poke(burstSize.U)
       dut.io.tilelink_in.a.bits.source.poke(2.U)
-      dut.io.tilelink_in.a.bits.data.poke(0xCAFEBA.U)
-      dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.data.poke(0xCAFE.U)
+      //dut.io.tilelink_in.a.bits.mask.poke(0x7.U)
+      dut.io.tilelink_in.a.bits.mask.poke(0x0.U)
       dut.io.tilelink_in.a.bits.param.poke(0.U)
       dut.io.tilelink_in.a.bits.corrupt.poke(false.B)
       
@@ -401,6 +411,7 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink_in.a.ready.expect(true.B)
       dut.io.tilelink_out.a.valid.expect(true.B)
 
+      // ((framePointer + virtualAddr) - config.frameSize.U))
       val expectedAddr = 50 
       dut.io.tilelink_out.a.bits.address.expect(expectedAddr.U)
     }

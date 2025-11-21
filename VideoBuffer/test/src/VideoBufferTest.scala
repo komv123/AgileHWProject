@@ -37,7 +37,8 @@ class VideoBufferTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.tilelink.a.bits.source.poke(1.U)
       dut.io.tilelink.a.bits.size.poke(0.U)
       dut.io.tilelink.a.bits.address.poke(0.U)
-      dut.io.tilelink.a.bits.mask.poke(7.U)
+      //dut.io.tilelink.a.bits.mask.poke(7.U)
+      dut.io.tilelink.a.bits.mask.poke(0.U)
       dut.io.tilelink.a.bits.data.poke(randInt.asUInt)
 
       dut.io.tilelink.a.valid.poke(true.B)
@@ -97,7 +98,8 @@ class VideoBufferTester extends AnyFlatSpec with Matchers with ChiselSim {
         dut.io.tilelink.a.bits.source.poke(1.U)
         dut.io.tilelink.a.bits.size.poke(15.U)
         dut.io.tilelink.a.bits.address.poke(0.U)
-        dut.io.tilelink.a.bits.mask.poke(7.U)
+        //dut.io.tilelink.a.bits.mask.poke(7.U)
+        dut.io.tilelink.a.bits.mask.poke(0.U)
         dut.io.tilelink.a.bits.data.poke(randInt(i).asUInt)
 
         dut.io.tilelink.a.valid.poke(true.B)
