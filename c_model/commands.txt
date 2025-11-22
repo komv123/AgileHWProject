@@ -1,0 +1,8 @@
+./mandelbrot_fixed -1.34 0.0 4.0 1000 pic.ppm                       -   Home
+./mandelbrot_fixed -0.743517833 0.127094578 0.005 1000 pic.ppm      -   Seahorse valey
+./mandelbrot_fixed -1.7687788 0.0017389 0.000001 1000 pic.ppm       -   Julia island
+./mandelbrot_fixed -0.776592847 0.136640848 0.000005 1000 pic.ppm   -   Sun
+./mandelbrot_fixed -0.226266648 -1.11617444 0.000001 1000 pic.ppm   -   Tendrils
+
+
+
