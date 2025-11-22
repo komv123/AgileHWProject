@@ -15,6 +15,5 @@ build/
 rtl/
 synth/build/
 *.gtkw
-rtl
 
 Device.sv
