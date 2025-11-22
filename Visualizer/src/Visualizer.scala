@@ -6,16 +6,26 @@ import circt.stage.ChiselStage
 
 import vga._
 
-class Visualizer extends Module {
+case class VisualizerConfig(
+  val vga: VGAConfig,
+  val clockFrequency: Int,
+)
+
+object VisualizerConfig {
+  val default = VisualizerConfig(
+    vga = VGAConfig.vga640x480at60Hz,
+    clockFrequency = 100000000,
+  )
+}
+
+class Visualizer(config: VisualizerConfig) extends Module {
   val io = IO(new Bundle {
     val btnl, btnc, btnr = Input(Bool())
     val red, green, blue = Output(UInt(4.W))
     val horizontalSyncPulse, verticalSyncPulse = Output(Bool())
   })
 
-  val clockFrequency = 100000000
-  val config = VGAConfig.vga640x480at60Hz
-  val vgaController = Module(new VGAController(config, clockFrequency))
+  val vgaController = Module(new VGAController(config.vga, config.clockFrequency))
 
   io.horizontalSyncPulse := vgaController.io.horizontal.syncPulse
   io.verticalSyncPulse := vgaController.io.vertical.syncPulse
@@ -27,7 +37,7 @@ class Visualizer extends Module {
 
 object Main extends App {
   ChiselStage.emitSystemVerilogFile(
-    new Visualizer(),
+    new Visualizer(VisualizerConfig.default),
     args = Array("--target-dir", "rtl"),
     firtoolOpts = Array("--lowering-options=disallowLocalVariables,disallowPackedArrays")
   )
