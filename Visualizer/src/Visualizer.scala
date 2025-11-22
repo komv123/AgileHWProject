@@ -17,8 +17,8 @@ class Visualizer extends Module {
   val config = VGAConfig.vga640x480at60Hz
   val vgaController = Module(new VGAController(config, clockFrequency))
 
-  io.horizontalSyncPulse := ~vgaController.io.horizontalSyncPulse
-  io.verticalSyncPulse := ~vgaController.io.verticalSyncPulse
+  io.horizontalSyncPulse := vgaController.io.horizontalSyncPulse
+  io.verticalSyncPulse := vgaController.io.verticalSyncPulse
 
   io.red := Mux(io.btnl && !(vgaController.io.horizontalBlank || vgaController.io.verticalBlank), "b1111".U, "b0000".U)
   io.green := Mux(io.btnc && !(vgaController.io.horizontalBlank || vgaController.io.verticalBlank), "b1111".U, "b0000".U)
