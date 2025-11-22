@@ -57,5 +57,5 @@ object VideoBuffer extends ChiselModule {
 }
 
 object Pipeline extends ChiselModule {
-  override def moduleDeps = Seq(Common, MMU, VideoBuffer)
+  override def moduleDeps = Seq(Common, MMU, VideoBuffer, ComputeModule)
 }

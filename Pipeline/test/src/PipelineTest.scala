@@ -5,6 +5,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import java.io.PrintWriter
 import scala.util.control.Breaks._
 
+import Pipeline._
+
 class PipelineTest extends AnyFlatSpec with ChiselSim {
     "TLCUTest" should "render 32 x 32 " in {
         simulate(new Pipeline(32, 32)) { dut =>

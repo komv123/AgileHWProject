@@ -5,17 +5,19 @@ import chisel3.util._
 
 import Common._
 import VideoBuffer._
-//import ComputeModule._
 import MMU._
+import ComputeModule._
 
 //class VideoBuffer(implicit c: Configuration) extends Module{
-class Pipeline(width: Int, height: Int) extends Module{
-  implicit val c: Configuration = config
-  //val pointerwidth = log2Ceil(c.bufferSize)
+class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultConfig) extends Module{
+  // Alias for modules that expect 'config' as the implicit name
+  val config: Configuration = c
+
+  val pointerwidth = log2Ceil(c.bufferSize)
 
   val io = IO(new Bundle{
     val ReadData = Flipped(new Readport(UInt(12.W), pointerwidth))
-    val bufferPointer = Input(UInt(log2Ceil(config.bufferSize).W))
+    val bufferPointer = Input(UInt(log2Ceil(c.bufferSize).W))
     val framePointer = Input(UInt(24.W))
 
     val xmid    = Input(SInt(64.W))
@@ -25,16 +27,16 @@ class Pipeline(width: Int, height: Int) extends Module{
     val new_params  = Input(Bool())
   })
 
-  val VideoBuffer = Module(new VideoBuffer())
-  val MMU = Module(new MMU())
-  val CU = Module(new CompColorWrapper(width,height,0))
+  val videoBuffer = Module(new VideoBuffer(config))
+  val mmu = Module(new MMU()(config))
+  val cu = Module(new CompColorWrapper(width, height, 0)(c))
 
-  MMU.io.tilelink_in <> CU.io.tilelink_out
-  VideoBuffer.io.tilelink <> MMU.io.tilelink_in
-  io.ReadData <> Videobuffer.io.ReadData
+  mmu.io.tilelink_in <> cu.io.tilelink_out
+  videoBuffer.io.tilelink <> mmu.io.tilelink_out
+  io.ReadData <> videoBuffer.io.ReadData
 
-  io.bufferPointer := MMU.io.bufferPointer
-  io.framePointer := MMU.io.framePointer
+  mmu.io.bufferPointer := io.bufferPointer
+  mmu.io.framePointer := io.framePointer
 
   //CU.io.xmid := -3193384776L.S
   //CU.io.ymid := 545867056L.S  
@@ -42,9 +44,9 @@ class Pipeline(width: Int, height: Int) extends Module{
   //CU.io.maxiter := 1000.U
   //CU.io.new_params := 1.B
   
-  CU.io.xmid := io.xmid 
-  CU.io.ymid := io.ymid 
-  CU.io.zoom := io.zoom 
-  CU.io.maxiter := io.maxiter 
-  CU.io.new_params := io.new_params 
+  cu.io.xmid := io.xmid
+  cu.io.ymid := io.ymid
+  cu.io.zoom := io.zoom
+  cu.io.maxiter := io.maxiter
+  cu.io.new_params := io.new_params 
 }

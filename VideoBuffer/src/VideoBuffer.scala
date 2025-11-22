@@ -8,7 +8,7 @@ import Common._
 
 //class VideoBuffer(implicit c: Configuration) extends Module{
 class VideoBuffer(config: Configuration) extends Module{
-  //implicit val c: Configuration = config
+  implicit val c: Configuration = config
 
   val pointerwidth = log2Ceil(c.bufferSize)
 
