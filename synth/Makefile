@@ -7,7 +7,7 @@ FPGA_FAM    := xc7
 current_dir := ${CURDIR}
 XDC         := ${CURDIR}/boards/Nexys-A7-100T-Master.xdc
 TOP         := $(TOPMOD)
-SOURCES     := $(RTLFILE)
+SOURCES     := $(RTLFILELIST)
 PART = xc7a100t-1csg324
 
 .ONESHELL:

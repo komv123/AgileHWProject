@@ -31,7 +31,7 @@ rtl:
 .PHONY: synth
 synth: rtl
 	@echo "+++ Synthesizing for $(BOARD) board..."
-	$(MAKE) -C $(SYNTHDIR) synth BOARD=$(BOARD) TOPMOD=$(TOPMOD) RTLFILE=$(RTLFILE) F4PGA_INSTALL_DIR=$(F4PGA_INSTALL_DIR) F4PGA_EXAMPLES_DIR=$(F4PGA_EXAMPLES_DIR)
+	$(MAKE) -C $(SYNTHDIR) synth BOARD=$(BOARD) TOPMOD=$(TOPMOD) RTLFILELIST=$(RTLFILELIST) F4PGA_INSTALL_DIR=$(F4PGA_INSTALL_DIR) F4PGA_EXAMPLES_DIR=$(F4PGA_EXAMPLES_DIR)
 
 # Program the FPGA
 # Depends on the bitstream from the synth step.
@@ -66,7 +66,7 @@ show:
 	@echo 'BOARD       :' $(BOARD)
 	@echo 'TOPMOD      :' $(TOPMOD)
 	@echo 'RTLDIR      :' $(RTLDIR)
-	@echo 'RTLFILE     :' $(RTLFILE)
+	@echo 'RTLFILELIST :' $(RTLFILELIST)
 	@echo 'MILL_TARGET :' $(MILL_TARGET)
 	@echo '--------------------------------'
 	@echo 'F4PGA_INSTALL_DIR  :' $(F4PGA_INSTALL_DIR)
