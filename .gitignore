@@ -6,6 +6,7 @@ out
 target
 project
 test_run_dir
+build
 .scalafmt.conf
 /f4pga/tools/
 /f4pga/f4pga-examples/
@@ -13,5 +14,6 @@ test_run_dir
 build/
 rtl/
 synth/build/
+*.gtkw
 
 Device.sv
