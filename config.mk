@@ -8,7 +8,7 @@ TOPMOD = Visualizer
 RTLDIR = $(CURDIR)/rtl
 
 # defines the final name of the SystemVerilog file
-RTLFILELIST = $(shell cat $(RTLDIR)/filelist.f)
+#RTLFILE = $(shell cat $(RTLDIR)/filelist.f)
 
 # mill command to generate the SystemVerilog file.
 # This command tells mill to run the generator's Main function.
