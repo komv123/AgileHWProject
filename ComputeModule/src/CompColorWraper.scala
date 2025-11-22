@@ -105,7 +105,7 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
                 buffer.io.ReadData.request.valid := true.B
                 cntReg := cntReg + 1.U
 
-                when(cntReg === 1023.U) {
+                when(cntReg === 1024.U) {
                     cntReg := 0.U
                     stateReg := State.RECIEVE_ACK
                     transcactionStarted := 0.U
