@@ -59,8 +59,9 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
 
     // *** FSM ***
     object State extends ChiselEnum {
-        val IDLE, SETUP, BURST = Value
+        val IDLE, BURST, RECIEVE_ACK = Value
     }
+
     val stateReg = RegInit(State.IDLE)
     val cntReg = RegInit(0.U(12.W))
     val transcactionStarted = RegInit(0.U(1.W))
@@ -106,15 +107,18 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
 
                 when(cntReg === 1023.U) {
                     cntReg := 0.U
-                    stateReg := State.IDLE
+                    stateReg := State.RECIEVE_ACK
                     transcactionStarted := 0.U
                     addroffsetreg := addroffsetreg + 1023.U
                 }
             }
         }
+        is(State.RECIEVE_ACK) {
+            io.tilelink_out.d.ready := true.B
+
+            when(io.tilelink_out.d.valid){
+                stateReg := State.IDLE
+            }
+        }
     }
-
-
-
-
 }
