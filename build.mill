@@ -36,7 +36,9 @@ trait ChiselModule extends ScalaModule with ScalafmtModule { m =>
 
 object Common extends ChiselModule { }
 
-object ComputeModule extends ChiselModule { }
+object ComputeModule extends ChiselModule {
+  override def moduleDeps = Seq(Common)
+}
 
 object Compression extends ChiselModule {
   override def moduleDeps = Seq(Common)

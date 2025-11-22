@@ -8,6 +8,7 @@ class ColorMatch extends Module {
         val k_in        = Input(UInt(32.W))
         val valid_in    = Input(Bool())
         val maxiter_in  = Input(UInt(16.W))
+        val buffer_ready = Input(Bool())
 
         val rgb_out     = Output(UInt(12.W))
         val ready       = Output(Bool())
@@ -104,8 +105,10 @@ class ColorMatch extends Module {
 
             rgb := (red << 8) | (green << 4) | blue
             valid_out := 1.B
-            ready := 1.B
-            stateReg := IDLE
+            when(io.buffer_ready){
+                ready := 1.B
+                stateReg := IDLE
+            }
         }
 
     }
