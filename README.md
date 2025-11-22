@@ -67,7 +67,7 @@ The tools only needs to be installed once.
 If you already have the tools installed see [Tips](#Tools)
 
 ## Checks before running the code
-For now the top module is set to be ```VGA/Blinky.scala``` for testing the workflow because we still don't have a VGA top module. It can be later changed in the ```config.mk``` file:
+For now the top module is set to be ```Visualizer/Visualizer.scala``` for testing the workflow because we still don't have a VGA top module. It can be later changed in the ```config.mk``` file:
 
 ```shell
 TOPMOD = NewTop
@@ -122,15 +122,13 @@ make synth
 This will create the directory ```synth/build/nexys-a7-100t/```.
 
 ## Programming the FPGA
-The build directory contains a lot of files but the most interesting one is the ```Blinky.bit``` which is the bitstream file.
+The build directory contains a lot of files but the most interesting one is the ```<TopModule>.bit``` which is the bitstream file.
 This is the file that is used programmed to the FPGA when it is programmed.
 To program the FPGA plug in your FPGA via USB and run following command:
 
 ```shell
 make program
 ```
-
-You should now see an LED on the FPGA blinking if not see [Troubleshooting](#Troubleshooting).
 
 ## Tips
 ### Tools
