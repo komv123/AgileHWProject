@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 
   printf("xmin, xmax, ymin, ymax: %ld %ld %ld %ld\n", xmin, xmax, ymin, ymax);
 
-  const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 256 ? 256 : (unsigned short)atoi(argv[4]);
+  const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 10 ? 10 : (unsigned short)atoi(argv[4]);
   
   const int xres = 320;
   const int yres = 240;

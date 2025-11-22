@@ -3,7 +3,7 @@ import chisel3.util._
 import javax.swing.InputMap
 import scala.annotation.switch
 
-class CompColorWrapper extends Module {
+class CompColorWrapper(width: Int, height: Int, n: Int) extends Module {
     val io = IO(new Bundle {
         val xmid    = Input(SInt(64.W))
         val ymid    = Input(SInt(64.W))
@@ -17,7 +17,7 @@ class CompColorWrapper extends Module {
         val j_out       = Output(SInt(16.W))
     })
 
-    val compmod = Module(new CompMod())
+    val compmod = Module(new CompMod(width, height))
     val color = Module(new ColorMatch())
 
     val k_valid = RegInit(0.B)

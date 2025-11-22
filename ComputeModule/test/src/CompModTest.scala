@@ -5,7 +5,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class CompModSpec extends AnyFlatSpec with ChiselSim {
   "ComputeModule" should "pass" in {
-    simulate(new CompMod()) { dut =>
+    simulate(new CompMod(20, 15)) { dut =>
       println("Start set")
       // for (i <- 0 until 1) {
       dut.io.xmid.poke(-5755256176L.S)

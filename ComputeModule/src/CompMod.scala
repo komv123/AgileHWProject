@@ -3,7 +3,7 @@ import chisel3.util._
 import javax.swing.InputMap
 import scala.annotation.switch
 
-class CompMod extends Module {
+class CompMod(width: Int, height: Int) extends Module {
     val io = IO(new Bundle {
         val xmid    = Input(SInt(64.W))
         val ymid    = Input(SInt(64.W))
@@ -87,8 +87,8 @@ class CompMod extends Module {
             ymin := ymin_next
             ymax := ymax_next
 
-            dx := (xmax_next - xmin_next) / xres;
-            dy := (ymax_next - ymin_next) / yres;
+            dx := (xmax_next - xmin_next) / width.S;
+            dy := (ymax_next - ymin_next) / height.S;
 
             j := 0.S
 
@@ -100,7 +100,7 @@ class CompMod extends Module {
             i := 0.S
             j := j + 1.S
 
-            when (j < yres){stateReg := XLOOP} 
+            when (j < height.S){stateReg := XLOOP} 
             .otherwise {
                 j := 0.S
                 stateReg := IDLE
@@ -121,7 +121,7 @@ class CompMod extends Module {
 
             val i_next = i + 1.S
 
-            when (i < xres) {
+            when (i < width.S) {
                 when (io.ready){
                 i := i_next
                 k := k_next
