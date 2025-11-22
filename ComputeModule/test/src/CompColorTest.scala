@@ -20,12 +20,12 @@
 
 //             println("Start full test")
 
-//             dut.io.xmid.poke(-5755256176L.S)
-//             dut.io.ymid.poke(0L.S)
-//             dut.io.zoom.poke(8589934592L.S)
-//             // dut.io.xmid.poke(-3193384776L.S)
-//             // dut.io.ymid.poke(545867056L.S)
-//             // dut.io.zoom.poke(21474836L.S)
+//             // dut.io.xmid.poke(-5755256176L.S)
+//             // dut.io.ymid.poke(0L.S)
+//             // dut.io.zoom.poke(8589934592L.S)
+//             dut.io.xmid.poke(-3193384776L.S)
+//             dut.io.ymid.poke(545867056L.S)
+//             dut.io.zoom.poke(21474836L.S)
 //             dut.io.maxiter.poke(1000.U)
 //             dut.io.new_params.poke(1.B)
 //             dut.clock.step(5)

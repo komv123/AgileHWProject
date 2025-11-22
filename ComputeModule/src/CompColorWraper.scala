@@ -49,11 +49,14 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
 
     io.tilelink_out.d.ready := false.B 
 
-    buffer.io.WriteData.valid := false.B
-    buffer.io.WriteData.bits := DontCare 
+    //buffer.io.WriteData.valid := false.B
+    //buffer.io.WriteData.bits := DontCare 
 
     buffer.io.ReadData.request.valid := false.B
     buffer.io.ReadData.request.bits.addr := DontCare 
+
+    buffer.io.WriteData.valid := color.io.valid_out
+    buffer.io.WriteData.bits := color.io.rgb_out
 
     val addroffsetreg = RegInit(0.U(24.W))
 
@@ -105,11 +108,11 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
                 buffer.io.ReadData.request.valid := true.B
                 cntReg := cntReg + 1.U
 
-                when(cntReg === 1024.U) {
+                when(cntReg === 1023.U) {
                     cntReg := 0.U
                     stateReg := State.RECIEVE_ACK
                     transcactionStarted := 0.U
-                    addroffsetreg := addroffsetreg + 1023.U
+                    addroffsetreg := addroffsetreg + 1024.U
                 }
             }
         }

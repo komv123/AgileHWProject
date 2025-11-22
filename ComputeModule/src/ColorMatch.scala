@@ -63,9 +63,9 @@ class ColorMatch extends Module {
     switch(stateReg){
         is (IDLE){
             ready := 1.B
+            valid_out := 0.B
             when (new_k){
                 ready := 0.B
-                valid_out := 0.B
                 new_k := 0.B
                 stateReg := SETUP
             }
@@ -104,10 +104,10 @@ class ColorMatch extends Module {
             val blue = interpolate(Blue(segment), Blue(segment+1.U))
 
             rgb := (red << 8) | (green << 4) | blue
-            valid_out := 1.B
             when(io.buffer_ready){
                 ready := 1.B
                 stateReg := IDLE
+                valid_out := 1.B
             }
         }
 
