@@ -18,16 +18,16 @@ class VGATester extends AnyFlatSpec with Matchers with ChiselSim {
 
       def testHorizontalPeriod(pixels: Int, blank: Boolean, syncPulse: Boolean) = {
         for (i <- 0 until pixels) {
-          dut.io.horizontalBlank.expect(blank.B)
-          dut.io.horizontalSyncPulse.expect(syncPulse.B)
+          dut.io.horizontal.blank.expect(blank.B)
+          dut.io.horizontal.syncPulse.expect(syncPulse.B)
           dut.clock.step(clockFrequency / config.pixelFrequency)
         }
       }
 
       def testVerticalPeriod(lines: Int, blank: Boolean, syncPulse: Boolean) = {
         for (i <- 0 until lines) {
-          dut.io.verticalBlank.expect(blank.B)
-          dut.io.verticalSyncPulse.expect(syncPulse.B)
+          dut.io.vertical.blank.expect(blank.B)
+          dut.io.vertical.syncPulse.expect(syncPulse.B)
           testHorizontalPeriod(config.horizontal.pixels, false, true)
           testHorizontalPeriod(config.horizontal.frontPorch, true, true)
           testHorizontalPeriod(config.horizontal.syncPulse, true, false)

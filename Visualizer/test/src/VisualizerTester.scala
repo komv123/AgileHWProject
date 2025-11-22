@@ -9,7 +9,7 @@ import org.scalatest.matchers.must.Matchers
 class VisualizerTester extends AnyFlatSpec with Matchers with ChiselSim {
   "Visulizer" should "pass" in {
     simulate(new Visualizer()) { dut =>
-      dut.clock.step(100_000_000)
+      dut.clock.step(100000000)
     }
   }
 }

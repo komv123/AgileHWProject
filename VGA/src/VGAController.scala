@@ -48,9 +48,15 @@ object VGACounter {
   }
 }
 
+class VGASignals extends Bundle {
+  val syncPulse, blank = Output(Bool())
+}
+
 class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
   val io = IO(new Bundle {
-    val horizontalSyncPulse, verticalSyncPulse, horizontalBlank, verticalBlank, pixelClock = Output(Bool())
+    val horizontal = new VGASignals()
+    val vertical = new VGASignals()
+    val pixelClock = Output(Bool())
   })
 
   val (_, pixelClock) = Counter(true.B, clockFrequency / config.pixelFrequency)
@@ -64,9 +70,9 @@ class VGAController(config: VGAConfig, clockFrequency: Int) extends Module {
 
   verticalCounter.io.counterEnable := horizontalCounter.io.wrap
 
-  io.horizontalSyncPulse := horizontalCounter.io.syncPulse
-  io.verticalSyncPulse := verticalCounter.io.syncPulse
+  io.horizontal.syncPulse := horizontalCounter.io.syncPulse
+  io.vertical.syncPulse := verticalCounter.io.syncPulse
 
-  io.horizontalBlank := horizontalCounter.io.blank
-  io.verticalBlank := verticalCounter.io.blank
+  io.horizontal.blank := horizontalCounter.io.blank
+  io.vertical.blank := verticalCounter.io.blank
 }
