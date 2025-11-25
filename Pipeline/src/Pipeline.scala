@@ -35,16 +35,9 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
   videoBuffer.io.tilelink <> mmu.io.tilelink_out
   io.ReadData <> videoBuffer.io.ReadData
 
-  //mmu.io.bufferPointer := io.bufferPointer
   mmu.io.bufferPointer := videoBuffer.io.bufferPointer 
   mmu.io.framePointer := io.framePointer
 
-  //CU.io.xmid := -3193384776L.S
-  //CU.io.ymid := 545867056L.S  
-  //CU.io.zoom := 21474836L.S
-  //CU.io.maxiter := 1000.U
-  //CU.io.new_params := 1.B
-  
   cu.io.xmid := io.xmid
   cu.io.ymid := io.ymid
   cu.io.zoom := io.zoom
