@@ -20,19 +20,20 @@ object VisualizerConfig {
 
 class Visualizer(config: VisualizerConfig) extends Module {
   val io = IO(new Bundle {
-    val btnl, btnc, btnr = Input(Bool())
-    val red, green, blue = Output(UInt(4.W))
+    val colors = Output(new RGB(config.vga.colorDepth))
     val horizontalSyncPulse, verticalSyncPulse = Output(Bool())
   })
 
   val vgaController = Module(new VGAController(config.vga, config.clockFrequency))
 
+  // Temporary colors
+  vgaController.io.colors.input.red := 15.U
+  vgaController.io.colors.input.green := 15.U
+  vgaController.io.colors.input.blue := 15.U
+
   io.horizontalSyncPulse := vgaController.io.horizontal.syncPulse
   io.verticalSyncPulse := vgaController.io.vertical.syncPulse
-
-  io.red := Mux(io.btnl && !(vgaController.io.horizontal.blank || vgaController.io.vertical.blank), "b1111".U, "b0000".U)
-  io.green := Mux(io.btnc && !(vgaController.io.horizontal.blank || vgaController.io.vertical.blank), "b1111".U, "b0000".U)
-  io.blue := Mux(io.btnr && !(vgaController.io.horizontal.blank || vgaController.io.vertical.blank), "b1111".U, "b0000".U)
+  io.colors := vgaController.io.colors.output
 }
 
 object Main extends App {
