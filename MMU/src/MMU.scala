@@ -24,9 +24,9 @@ object MMU {
   def loRange(virtualAddr: UInt, framePointer: UInt)(implicit config: Configuration): Bool = {
     val out = Wire(Bool())
     when((framePointer + config.bufferSize.U) < config.frameSize.U) {
-      out := virtualAddr > framePointer
+      out := virtualAddr >= framePointer
     } .otherwise {
-      out := xor(virtualAddr > framePointer, virtualAddr < ((framePointer + config.bufferSize.U) - config.frameSize.U))
+      out := xor(virtualAddr >= framePointer, virtualAddr <= ((framePointer + config.bufferSize.U) - config.frameSize.U))
     }
     out
   }

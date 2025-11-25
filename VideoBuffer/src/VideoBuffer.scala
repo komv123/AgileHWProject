@@ -15,9 +15,10 @@ class VideoBuffer(config: Configuration) extends Module{
   val io = IO(new Bundle{
     val ReadData = Flipped(new Readport(UInt(12.W), pointerwidth))
     val tilelink = Flipped(new Tilelink()(c))
+    val bufferPointer = Output(UInt(log2Ceil(c.bufferSize).W))
   })
 
-  val Tail = RegInit(0.U(pointerwidth.W))
+  val Tail = RegInit(0.U(log2Ceil(c.bufferSize).W))
   val TailFlip = RegInit(0.U(1.W))
   val Mem = Module(new DualPortRAM(c.bufferSize, UInt(12.W)))
   
@@ -28,6 +29,8 @@ class VideoBuffer(config: Configuration) extends Module{
   val stateReg = RegInit(0.U(4.W))
   val burstCounter = RegInit(0.U(24.W)) // Counts to a.size
   val sourceReg = RegInit(0.U(c.sourceWidth.W))
+
+  io.bufferPointer := Tail
 
   io.tilelink.a.ready := true.B 
   io.tilelink.d.valid := false.B

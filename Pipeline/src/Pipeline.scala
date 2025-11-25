@@ -17,7 +17,7 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
 
   val io = IO(new Bundle{
     val ReadData = Flipped(new Readport(UInt(12.W), pointerwidth))
-    val bufferPointer = Input(UInt(log2Ceil(c.bufferSize).W))
+    //val bufferPointer = Input(UInt(log2Ceil(c.bufferSize).W))
     val framePointer = Input(UInt(24.W))
 
     val xmid    = Input(SInt(64.W))
@@ -35,7 +35,8 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
   videoBuffer.io.tilelink <> mmu.io.tilelink_out
   io.ReadData <> videoBuffer.io.ReadData
 
-  mmu.io.bufferPointer := io.bufferPointer
+  //mmu.io.bufferPointer := io.bufferPointer
+  mmu.io.bufferPointer := videoBuffer.io.bufferPointer 
   mmu.io.framePointer := io.framePointer
 
   //CU.io.xmid := -3193384776L.S
