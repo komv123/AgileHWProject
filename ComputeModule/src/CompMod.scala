@@ -5,13 +5,14 @@ import chisel3.util._
 import javax.swing.InputMap
 import scala.annotation.switch
 
-class CompMod(width: Int, height: Int) extends Module {
+class CompMod(width: Int, height: Int, n: Int) extends Module {
     val io = IO(new Bundle {
         val xmid    = Input(SInt(64.W))
         val ymid    = Input(SInt(64.W))
         val zoom        = Input(SInt(64.W))
         val maxiter     = Input(UInt(16.W))
         val new_params  = Input(Bool())
+        val start_address = Input(UInt(24.W))
         
         val ready = Input(Bool())
 
@@ -31,6 +32,16 @@ class CompMod(width: Int, height: Int) extends Module {
     /* Constants */
     val escape = 17179869184L.S
     val v_smth = 8589934592L.S
+
+    val widthU = width.U
+    val heightU = height.U
+    val nU = n.U
+    val widthS = width.S
+    val heightS = height.S
+    val nS = n.S
+
+    val addr_max1 = width.U * (height.U * n.U)
+    val addr_maxCU = addr_max1 / n.U
 
     /* Resolution */
     val xres = 320.S
@@ -83,14 +94,21 @@ class CompMod(width: Int, height: Int) extends Module {
             var xmax_next = io.xmid + (io.zoom >> 1)
             var ymin_next = io.ymid - (io.zoom * 3.S >> 3)
             var ymax_next = io.ymid + (io.zoom * 3.S >> 3)
+            
+            var position = io.start_address / addr_maxCU
+
+            var y_window = (ymax_next - ymin_next) / n.S
+
+            var ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
+            var ymax_cu_next = ymax_next - (y_window * position)
 
             xmin := xmin_next
             xmax := xmax_next
-            ymin := ymin_next
-            ymax := ymax_next
+            ymin := ymin_cu_next
+            ymax := ymax_cu_next
 
-            dx := (xmax_next - xmin_next) / width.S;
-            dy := (ymax_next - ymin_next) / height.S;
+            dx := (xmax_next - xmin_next) / width.S
+            dy := (ymax_cu_next - ymin_cu_next) / height.S;
 
             j := 0.S
 

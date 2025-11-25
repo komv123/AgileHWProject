@@ -11,6 +11,7 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
         val zoom        = Input(SInt(64.W))
         val maxiter     = Input(UInt(16.W))
         val new_params  = Input(Bool())
+        val start_address = Input(UInt(24.W))
 
         val rgb_out     = Output(UInt(12.W))
         val valid_out   = Output(Bool())
@@ -20,7 +21,7 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
         val tilelink_out = new Tilelink()(c)
     })
 
-    val compmod = Module(new CompMod(width, height))
+    val compmod = Module(new CompMod(width, (height / n), n))
     val color = Module(new ColorMatch())
 
     val k_valid = RegInit(0.B)
@@ -29,12 +30,13 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
     val buffer = Module(new BufferFIFO(1024, UInt(12.W)))
     
     /* IO connects */
-    compmod.io.xmid         := io.xmid
-    compmod.io.ymid         := io.ymid
-    compmod.io.zoom         := io.zoom
-    compmod.io.maxiter      := io.maxiter
-    compmod.io.new_params   := io.new_params
-    compmod.io.ready        := color.io.ready
+    compmod.io.xmid             := io.xmid
+    compmod.io.ymid             := io.ymid
+    compmod.io.zoom             := io.zoom
+    compmod.io.maxiter          := io.maxiter
+    compmod.io.new_params       := io.new_params
+    compmod.io.ready            := color.io.ready
+    compmod.io.start_address    := io.start_address
 
     color.io.k_in       := compmod.io.k_out
     color.io.valid_in   := compmod.io.valid

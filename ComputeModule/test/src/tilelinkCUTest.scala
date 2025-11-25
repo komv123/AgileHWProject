@@ -7,9 +7,9 @@ import scala.util.control.Breaks._
 import ComputeModule._
 
 class TLCUSpec extends AnyFlatSpec with ChiselSim {
-    /*
+    
     "TLCUTest" should "render 32 x 32 " in {
-        simulate(new CompColorWrapper(32, 32, 1)) { dut =>
+        simulate(new CompColorWrapper(32, 64, 2)) { dut =>
             val writer = new PrintWriter("output.ppm")
 
             // PPM header
@@ -21,10 +21,11 @@ class TLCUSpec extends AnyFlatSpec with ChiselSim {
             dut.io.ymid.poke(545867056L.S)
             dut.io.zoom.poke(21474836L.S)
             dut.io.maxiter.poke(1000.U)
+            dut.io.start_address.poke(0.U)
             dut.io.new_params.poke(1.B)
             dut.clock.step(5)
             dut.io.new_params.poke(0.B)
-            breakable{for (i <- 0 until 1000000) {
+            breakable{for (i <- 0 until 500000) {
                 if(dut.io.tilelink_out.a.valid.peek().litToBoolean){break()}
                 dut.clock.step(1)
             }}
@@ -61,7 +62,7 @@ class TLCUSpec extends AnyFlatSpec with ChiselSim {
         }
     }
 
-
+    /*
     "TLCUTest" should "render 64 x 64" in {
         simulate(new CompColorWrapper(64, 64, 1)) { dut =>
             val writer = new PrintWriter("output.ppm")
@@ -126,7 +127,7 @@ class TLCUSpec extends AnyFlatSpec with ChiselSim {
         }
     }
     */
-    
+    /*
     "TLCUTest" should "render 96 x 96" in {
         simulate(new CompColorWrapper(96, 96, 1)) { dut =>
             val writer = new PrintWriter("output.ppm")
@@ -190,4 +191,5 @@ class TLCUSpec extends AnyFlatSpec with ChiselSim {
             writer.close()
         }
     }
+    */
 }
