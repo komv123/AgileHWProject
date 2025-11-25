@@ -342,8 +342,8 @@ class MMUTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.reset.poke(false.B)
       dut.clock.step()
       
-      val bufferPos = 928
-      val framePos = 928 
+      val bufferPos = c.bufferSize - 100 
+      val framePos = c.bufferSize - 100 
       dut.io.bufferPointer.poke(bufferPos.U)
       dut.io.framePointer.poke(framePos.U)
       
