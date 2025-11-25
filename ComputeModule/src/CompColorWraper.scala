@@ -78,20 +78,22 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
         io.tilelink_out.a.bits.param := 0.U //NA
         io.tilelink_out.a.bits.size := 1023.U //Full buffer write
         io.tilelink_out.a.bits.source := 0.U //ID 0
-        io.tilelink_out.a.bits.address := addroffsetreg
+        io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
         io.tilelink_out.a.bits.mask := 0.U // Not masking any bits
     }
 
     switch(stateReg){
         is(State.IDLE){
             // Buffer full
+            
+            io.tilelink_out.a.valid := true.B
+
             when(!buffer.io.WriteData.ready) {
-                io.tilelink_out.a.valid := true.B
                 io.tilelink_out.a.bits.opcode := 0.U //FullPut
                 io.tilelink_out.a.bits.param := 0.U //NA
                 io.tilelink_out.a.bits.size := 1023.U //Full buffer write
                 io.tilelink_out.a.bits.source := 0.U //ID 0
-                io.tilelink_out.a.bits.address := addroffsetreg
+                io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
                 io.tilelink_out.a.bits.mask := 0.U // Not masking any bits
                 io.tilelink_out.a.bits.data := buffer.io.ReadData.response.bits.readData // Reading directly from buffer
                 io.tilelink_out.a.bits.corrupt := !buffer.io.ReadData.response.valid // Corrupt if buffer empty
@@ -105,8 +107,10 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
             }
         }
         is(State.BURST){
+
+            io.tilelink_out.a.valid := true.B
+
             when(io.tilelink_out.a.ready){
-                io.tilelink_out.a.valid := true.B
                 io.tilelink_out.a.bits.data := buffer.io.ReadData.response.bits.readData // Reading directly from buffer
 
                 buffer.io.ReadData.request.valid := true.B

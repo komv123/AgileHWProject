@@ -28,28 +28,29 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   })
 
   val videoBuffer = Module(new VideoBuffer(config))
+  val cu = Seq.fill(n)(Module(new CompColorWrapper(width, height, n)(c)))
+
+
+  val xbarConfig = TLXbarConfig(
+    nMasters = n,
+    slaves = Seq(
+      TLSlaveConfig(Seq((0x0000, 0xFFFF)))  // Full address space
+    )
+  )(config)
+
+  val xbar = Module(new TLXbar(xbarConfig))
+
+  xbar.io.in <> cu.map{module => module.io.tilelink_out} 
+
   val mmu = Module(new MMU()(config))
-  val cu = VecInit(Seq.fill(n)(Module(new CompColorWrapper(width, height, n)(c))))
+  mmu.io.tilelink_in <> xbar.io.out(0)
 
-  mmu.io.tilelink_in <> cu.io.tilelink_out
-  videoBuffer.io.tilelink <> mmu.io.tilelink_out
-  io.ReadData <> videoBuffer.io.ReadData
-
-  //mmu.io.bufferPointer := io.bufferPointer
   mmu.io.bufferPointer := videoBuffer.io.bufferPointer 
   mmu.io.framePointer := io.framePointer
 
-  //CU.io.xmid := -3193384776L.S
-  //CU.io.ymid := 545867056L.S  
-  //CU.io.zoom := 21474836L.S
-  //CU.io.maxiter := 1000.U
-  //CU.io.new_params := 1.B
-  
-  // cu.io.xmid := io.xmid
-  // cu.io.ymid := io.ymid
-  // cu.io.zoom := io.zoom
-  // cu.io.maxiter := io.maxiter
-  // cu.io.new_params := io.new_params 
+  videoBuffer.io.tilelink <> mmu.io.tilelink_out
+  io.ReadData <> videoBuffer.io.ReadData
+
 
   cu.foreach { module =>
     module.io.xmid := io.xmid
@@ -59,7 +60,8 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
     module.io.new_params := io.new_params
   }
 
-  for (i <- 0 until nw) {
-    cu(i).io.start_address := (1024 * i).U
+  for (i <- 0 until n) {
+    //cu(i).io.start_address := (1024 * i).U
+    cu(i).io.start_address := (width * (height / n) * i).U
   }
 }
