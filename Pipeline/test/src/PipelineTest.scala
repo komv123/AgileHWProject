@@ -8,7 +8,7 @@ import scala.util.control.Breaks._
 import Pipeline._
 
 class PipelineTest extends AnyFlatSpec with ChiselSim {
-    "TLCUTest" should "render 32 x 32 " in {
+    "Pipeline" should "render 32 x 32 " in {
         simulate(new Pipeline(32, 32)) { dut =>
             val writer = new PrintWriter("output.ppm")
 
@@ -32,6 +32,10 @@ class PipelineTest extends AnyFlatSpec with ChiselSim {
             breakable{for (i <- 0 until 1000000) {
                 dut.clock.step(1)
             }}
+
+            dut.io.ReadData.request.valid.poke(true.B)
+
+            dut.clock.step(1)
 
             for (i <- 0 until 1024){
                 dut.io.ReadData.request.valid.poke(true.B)
