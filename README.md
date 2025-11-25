@@ -31,7 +31,7 @@ mill Visualizer.test
 ```
 This specific test and some other tests generate a visual output which you can see here:
 ```bash
-open out/Visualizer/test/test.dest/sandbox/drawing.png
+open out/Visualizer/test/test.dest/sandbox/frame-0.png
 ```
 
 ## Installing F4PGA

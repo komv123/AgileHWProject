@@ -11,16 +11,14 @@ import java.awt.Color
 import javax.imageio.ImageIO
 
 class VisualizerTester extends AnyFlatSpec with Matchers with ChiselSim {
-  "Visualizer" should "pass" in {
+  "Visualizer" should "draw frames" in {
     val config = VisualizerConfig.default
     simulate(new Visualizer(config)) { dut =>
-      val canvas = new BufferedImage(config.vga.horizontal.pixels, config.vga.vertical.pixels, BufferedImage.TYPE_INT_ARGB)
-
       def stepPixelClock(n: Int) = {
         dut.clock.step(n * (config.clockFrequency / config.vga.pixelFrequency))
       }
 
-      def testHorizontalPeriod(line: Int) = {
+      def testHorizontalPeriod(line: Int, canvas: BufferedImage) = {
         for (pixel <- 0 until config.vga.horizontal.pixels) {
           if (line < config.vga.vertical.pixels) {
             val red = (dut.io.colors.red.peek().litValue.toInt << (8 - config.vga.colorDepth)) | ((1 << (8 - config.vga.colorDepth)) - 1)
@@ -35,14 +33,17 @@ class VisualizerTester extends AnyFlatSpec with Matchers with ChiselSim {
         }
       }
 
-      def testVerticalPeriod() = {
+      def drawFrame(name: String) = {
+        val canvas = new BufferedImage(config.vga.horizontal.pixels, config.vga.vertical.pixels, BufferedImage.TYPE_INT_ARGB)
         for (line <- 0 until config.vga.vertical.pixels + config.vga.vertical.frontPorch + config.vga.vertical.syncPulse + config.vga.vertical.backPorch) {
-          testHorizontalPeriod(line)
+          testHorizontalPeriod(line, canvas)
         }
+        javax.imageio.ImageIO.write(canvas, "png", new java.io.File(name))
       }
 
-      testVerticalPeriod()
-      javax.imageio.ImageIO.write(canvas, "png", new java.io.File("drawing.png"))
+      for (i <- 0 until 3) {
+        drawFrame("frame-" + i + ".png")
+      }
     }
   }
 }
