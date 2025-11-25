@@ -56,7 +56,7 @@ uninstall:
 .PHONY: clean
 clean:
 	@echo "+++ Cleaning workspace..."
-	$(RM) -rf test_run_dir/ target/ project/target project/project out/
+	$(RM) -rf test_run_dir/ target/ project/target project/project out/ build/
 	$(MAKE) -C $(SYNTHDIR) BOARD=$(BOARD) F4PGA_EXAMPLES_DIR=$(F4PGA_EXAMPLES_DIR) clean
 
 # For debugging Makefile variables from config.mk
