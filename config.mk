@@ -1,5 +1,5 @@
 # name of the target FPGA board
-BOARD = nexys-a7-100t
+BOARD = arty_100
 
 # name of the top-level Chisel module
 TOPMOD = Visualizer
