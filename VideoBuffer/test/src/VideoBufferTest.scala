@@ -21,10 +21,8 @@ class VideoBufferTester extends AnyFlatSpec with Matchers with ChiselSim {
     val random = new Random()
     val numWords = 1  
     
-    //val randInt = Array.fill(numWords)(Random.nextInt(4096))
     val randInt = Random.nextInt(4096)
 
-    //simulate(new VideoBuffer(Configuration.default())).withAnnotations(Seq(VerilatorBackendAnnotation, WriteVcdAnnotation)) { dut =>
     simulate(new VideoBuffer(Configuration.default())) { dut =>
       // Tilelink burst write Transaction
       

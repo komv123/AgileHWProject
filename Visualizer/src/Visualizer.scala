@@ -1,10 +1,12 @@
 package visualizer
 
 import chisel3._
+import chisel3.util.Counter
 
 import circt.stage.ChiselStage
 
 import vga._
+import Pipeline._
 
 case class VisualizerConfig(
   val vga: VGAConfig,
@@ -25,11 +27,20 @@ class Visualizer(config: VisualizerConfig) extends Module {
   })
 
   val vgaController = Module(new VGAController(config.vga, config.clockFrequency))
+  val pipeline = Module(new Pipeline(config.vga.horizontal.pixels, config.vga.vertical.pixels))
 
-  // Temporary colors
-  vgaController.io.colors.input.red := 15.U
-  vgaController.io.colors.input.green := 15.U
-  vgaController.io.colors.input.blue := 15.U
+  val (pixelCount, _) = Counter(vgaController.io.requestPixel, config.vga.horizontal.pixels * config.vga.vertical.pixels)
+
+  pipeline.io.xmid := -3193384776L.S
+  pipeline.io.ymid := 545867056L.S  
+  pipeline.io.zoom := 21474836L.S
+  pipeline.io.maxiter := 1000.U
+  pipeline.io.new_params := 1.B
+  pipeline.io.framePointer := pixelCount
+  pipeline.io.ReadData.request.valid := vgaController.io.requestPixel
+  pipeline.io.ReadData.request.bits.addr := 0.U
+
+  vgaController.io.colors.input := pipeline.io.ReadData.response.bits.readData.asTypeOf(new RGB(config.vga.colorDepth))
 
   io.horizontalSyncPulse := vgaController.io.horizontal.syncPulse
   io.verticalSyncPulse := vgaController.io.vertical.syncPulse
