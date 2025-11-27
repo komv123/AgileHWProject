@@ -20,7 +20,6 @@
           gtkwave
           python3
           gnumake
-          jdk11_headless
         ];
 
         synthPackages = with pkgs; [
