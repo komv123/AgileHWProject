@@ -25,7 +25,7 @@ synth: $(SYNTHBUILDDIR)/${TOP_MODULE}.bit
 program: $(SYNTHBUILDDIR)/${TOP_MODULE}.bit
 	openFPGALoader ${JTAG_LINK} --bitstream $<
 
-$(SYNTHBUILDDIR)/${TOP_MODULE}.json: $(RTL_SOURCES)
+$(SYNTHBUILDDIR)/${TOP_MODULE}.json: $(RTLDIR)/$(TOP_MODULE).sv
 	mkdir -p $(SYNTHBUILDDIR)
 	yosys -p "synth_xilinx -flatten  -abc9 ${SYNTH_OPTS} -arch xc7 -top ${TOP_MODULE}; write_json -noscopeinfo $(SYNTHBUILDDIR)/${TOP_MODULE}.json" ${RTL_SOURCES}
 
