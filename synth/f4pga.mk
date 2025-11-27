@@ -5,13 +5,13 @@ TOP         := $(TOP_MODULE)
 SOURCES     := $(RTL_SOURCES)
 
 # Artix-7 Nexys A7-100T device triplet
-TARGET    := arty_100
-BOARD     := nexys_a7_100
-DEVICE    := xc7a100t
-PACKAGE   := csg324
-SPEED     := -1
-PART      := xc7a100t-1csg324
-FPGA_FAM  := xc7
+TARGET    ?= arty_100
+BOARD     ?= nexys_a7_100
+DEVICE    ?= xc7a100t
+PACKAGE   ?= csg324
+SPEED     ?= -1
+PART      ?= xc7a100t-1csg324
+FPGA_FAM  ?= xc7
 
 BOARDDIR ?= $(SYNTHDIR)/boards
 SYNTHBUILDDIR ?= $(SYNTHDIR)/build
