@@ -11,6 +11,9 @@ BUILDDIR    = $(CURDIR)/build
 OUTDIR      = $(CURDIR)/out
 SYNTHDIR    = $(CURDIR)/synth
 
+# Sources
+SOURCES = $(shell find . -name '*.scala' -not -path "./out/*")
+
 # Default targets
 TOP_MODULE ?= Visualizer
 MILL_TARGET ?= ${TOP_MODULE}.run
@@ -23,7 +26,7 @@ all: rtl
 # Generate SystemVerilog
 .PHONY: rtl
 rtl: $(RTLDIR)/$(TOP_MODULE).sv
-$(RTLDIR)/$(TOP_MODULE).sv:
+$(RTLDIR)/$(TOP_MODULE).sv: $(SOURCES)
 	@echo "+++ Generating Verilog..."
 	$(MILL) $(MILL_FLAGS) $(MILL_TARGET)
 
@@ -51,4 +54,5 @@ show:
 	@echo 'BUILDDIR    :' $(BUILDDIR)
 	@echo 'OUTDIR      :' $(OUTDIR)
 	@echo 'SYNTHDIR    :' $(SYNTHDIR)
+	@echo 'SOURCES     :' $(SOURCES)
 	@echo 'RTL_SOURCES :' $(RTL_SOURCES)
