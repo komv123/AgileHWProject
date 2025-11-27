@@ -8,6 +8,7 @@ project
 test_run_dir
 build
 .scalafmt.conf
+.scala-build
 /f4pga/tools/
 /f4pga/f4pga-examples/
 .DS_Store

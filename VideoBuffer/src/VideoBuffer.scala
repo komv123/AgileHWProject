@@ -32,7 +32,8 @@ class VideoBuffer(config: Configuration) extends Module{
 
   io.bufferPointer := Tail
 
-  io.tilelink.a.ready := true.B 
+  //io.tilelink.a.ready := true.B 
+  io.tilelink.a.ready := false.B 
   io.tilelink.d.valid := false.B
 
   io.tilelink.d.bits := DontCare
@@ -67,6 +68,7 @@ class VideoBuffer(config: Configuration) extends Module{
 
   switch(stateReg){ // Start write transaction  
     is(0.U){
+      io.tilelink.a.ready := true.B 
 
       when(io.tilelink.a.valid && io.tilelink.a.bits.opcode === 0.U){ // Write
 
@@ -85,16 +87,19 @@ class VideoBuffer(config: Configuration) extends Module{
       }
     }
     is(1.U){ // Continue burst
+      io.tilelink.a.ready := true.B 
 
-      Mem.io.Write.valid := true.B
-      Mem.io.Write.bits.addr := io.tilelink.a.bits.address + burstCounter
-      Mem.io.Write.bits.data := io.tilelink.a.bits.data
+      when(io.tilelink.a.valid){ // Write
+        Mem.io.Write.valid := true.B
+        Mem.io.Write.bits.addr := io.tilelink.a.bits.address + burstCounter
+        Mem.io.Write.bits.data := io.tilelink.a.bits.data
 
-      when(burstCounter < io.tilelink.a.bits.size){
-        burstCounter := burstCounter + 1.U
-        stateReg := 1.U
-      } .otherwise {
-        stateReg := 2.U // Return ack
+        when(burstCounter < io.tilelink.a.bits.size){
+          burstCounter := burstCounter + 1.U
+          stateReg := 1.U
+        } .otherwise {
+          stateReg := 2.U // Return ack
+        }
       }
     }
     is(2.U){ // Send ack
