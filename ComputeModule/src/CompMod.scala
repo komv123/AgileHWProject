@@ -5,15 +5,18 @@ import chisel3.util._
 import javax.swing.InputMap
 import scala.annotation.switch
 
-class CompMod(width: Int, height: Int, n: Int) extends Module {
+class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module {
+    // Extract parameters from config
+    val width = config.width
+    val height = config.height
+    val maxiter = config.maxiter
     val io = IO(new Bundle {
-        val xmid    = Input(SInt(64.W))
-        val ymid    = Input(SInt(64.W))
-        val zoom        = Input(SInt(64.W))
-        val maxiter     = Input(UInt(16.W))
+        val xmid    = Input(SInt(32.W))
+        val ymid    = Input(SInt(32.W))
+        val zoom        = Input(SInt(32.W))
         val new_params  = Input(Bool())
         val start_address = Input(UInt(24.W))
-        
+
         val ready = Input(Bool())
 
         val k_out       = Output(UInt(32.W))
@@ -25,13 +28,14 @@ class CompMod(width: Int, height: Int, n: Int) extends Module {
     /* Functions */
     def fixed_mul(a: SInt, b: SInt): SInt = {
         val product = a * b
-        product >> 32
+        product >> 16
     }
     def rising(v: Bool) = v & !RegNext(v)
 
     /* Constants */
-    val escape = 17179869184L.S
-    val v_smth = 8589934592L.S
+    val escape = 262144.S  // 4.0 in Q16.16 fixed-point (was 4.0 in Q32.32)
+    val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point (was 2.0 in Q32.32)
+    val three_eighths = 24576.S  // 3/8 = 0.375 in Q16.16 fixed-point
 
     val widthU = width.U
     val heightU = height.U
@@ -42,36 +46,32 @@ class CompMod(width: Int, height: Int, n: Int) extends Module {
 
     val addr_max1 = width.U * (height.U * n.U)
     val addr_maxCU = addr_max1 / n.U
-
-    /* Resolution */
-    val xres = 320.S
-    val yres = 240.S
     
     /* Register declarations */
-    val xmid    = RegInit(0.S(64.W)) //(-3335440880L.S(64.W))
-    val ymid    = RegInit(0.S(64.W)) //(586868269L.S(64.W))
-    val zoom    = RegInit(0.S(64.W)) //(99484L.S(64.W))
-    val maxiter = RegInit(1000.U(16.W)) //(1000.U(16.W))
-    
-    val xmin = RegInit(0.S(64.W))
-    val ymin = RegInit(0.S(64.W))
-    val xmax = RegInit(0.S(64.W))
-    val ymax = RegInit(0.S(64.W))
+    val xmid    = RegInit(0.S(32.W)) //(-3335440880L.S(32.W))
+    val ymid    = RegInit(0.S(32.W)) //(586868269L.S(32.W))
+    val zoom    = RegInit(0.S(32.W)) //(99484L.S(32.W))
+    //val maxiter = RegInit(1000.U(16.W)) //(1000.U(16.W))
 
-    val dx = RegInit(0.S(64.W))
-    val dy = RegInit(0.S(64.W))
+    val xmin = RegInit(0.S(32.W))
+    val ymin = RegInit(0.S(32.W))
+    val xmax = RegInit(0.S(32.W))
+    val ymax = RegInit(0.S(32.W))
 
-    val u = RegInit(0.S(64.W))
-    val v = RegInit(0.S(64.W))
-    val u2 = RegInit(0.S(64.W))
-    val v2 = RegInit(0.S(64.W))
+    val dx = RegInit(0.S(32.W))
+    val dy = RegInit(0.S(32.W))
+
+    val u = RegInit(0.S(32.W))
+    val v = RegInit(0.S(32.W))
+    val u2 = RegInit(0.S(32.W))
+    val v2 = RegInit(0.S(32.W))
 
     val i = RegInit(0.S(16.W))
     val j = RegInit(0.S(16.W))
     val k = RegInit(1.U(16.W))
 
-    val x = RegInit(0.S(64.W))
-    val y = RegInit(0.S(64.W))
+    val x = RegInit(0.S(32.W))
+    val y = RegInit(0.S(32.W))
 
     val k_out = RegInit(0.U(32.W))
     val valid = RegInit(0.B)
@@ -90,17 +90,19 @@ class CompMod(width: Int, height: Int, n: Int) extends Module {
         }
 
         is (SETUP) {
-            var xmin_next = io.xmid - (io.zoom >> 1)
-            var xmax_next = io.xmid + (io.zoom >> 1)
-            var ymin_next = io.ymid - (io.zoom * 3.S >> 3)
-            var ymax_next = io.ymid + (io.zoom * 3.S >> 3)
+            val xmin_next = io.xmid - (io.zoom >> 1)
+            val xmax_next = io.xmid + (io.zoom >> 1)
+            // Use fixed_mul to compute 3/8 * zoom without overflow
+            val y_offset = fixed_mul(io.zoom, three_eighths)
+            val ymin_next = io.ymid - y_offset
+            val ymax_next = io.ymid + y_offset
             
-            var position = io.start_address / addr_maxCU
+            val position = io.start_address / addr_maxCU
 
-            var y_window = (ymax_next - ymin_next) / n.S
+            val y_window = (ymax_next - ymin_next) / n.S
 
-            var ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
-            var ymax_cu_next = ymax_next - (y_window * position)
+            val ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
+            val ymax_cu_next = ymax_next - (y_window * position)
 
             xmin := xmin_next
             xmax := xmax_next
@@ -165,11 +167,21 @@ class CompMod(width: Int, height: Int, n: Int) extends Module {
             v2 := v2_next
             k  := k_next
 
+            /*
             when (!(k < maxiter && ((u2_next + v2_next) < escape))) {
                 when (k_next > maxiter){k_out := maxiter}
                 .otherwise {k_out := k_next}
                 valid := 1.B
                 stateReg := XLOOP}
+            */
+
+            when (!(k < maxiter.U && ((u2_next + v2_next) < escape))) {
+                when (k_next > maxiter.U){k_out := maxiter.U}
+                .otherwise {k_out := k_next}
+                valid := 1.B
+                stateReg := XLOOP
+            }
+
         }
     }
 

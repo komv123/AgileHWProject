@@ -27,9 +27,16 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
     val new_params  = Input(Bool())
   })
 
+  // Create compute config inline
+  val computeConfig = ComputeConfig(
+    width = width,
+    height = height,
+    maxiter = 1000
+  )
+
   val videoBuffer = Module(new VideoBuffer(config))
   val mmu = Module(new MMU()(config))
-  val cu = Module(new CompColorWrapper(width, height, 1)(c))
+  val cu = Module(new CompColorWrapper(computeConfig, n = 1, start_address = 0)(c))
 
   mmu.io.tilelink_in <> cu.io.tilelink_out
   videoBuffer.io.tilelink <> mmu.io.tilelink_out
@@ -41,8 +48,8 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
   cu.io.xmid := io.xmid
   cu.io.ymid := io.ymid
   cu.io.zoom := io.zoom
-  cu.io.maxiter := io.maxiter
+  //cu.io.maxiter := io.maxiter
   cu.io.new_params := io.new_params 
 
-  cu.io.start_address := 0.U
+  //cu.io.start_address := 0.U
 }

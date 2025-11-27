@@ -4,14 +4,18 @@ import chisel3._
 import chisel3.util._
 import Common._
 
-class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuration = defaultConfig) extends Module {
+class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(implicit val c: Configuration = defaultConfig) extends Module {
+    // Extract parameters from config
+    val width = config.width
+    val height = config.height
+
     val io = IO(new Bundle {
-        val xmid    = Input(SInt(64.W))
-        val ymid    = Input(SInt(64.W))
-        val zoom        = Input(SInt(64.W))
-        val maxiter     = Input(UInt(16.W))
+        val xmid    = Input(SInt(32.W))
+        val ymid    = Input(SInt(32.W))
+        val zoom        = Input(SInt(32.W))
+        //val maxiter     = Input(UInt(16.W))
         val new_params  = Input(Bool())
-        val start_address = Input(UInt(24.W))
+        //val start_address = Input(UInt(24.W))
 
         val rgb_out     = Output(UInt(12.W))
         val valid_out   = Output(Bool())
@@ -21,8 +25,8 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
         val tilelink_out = new Tilelink()(c)
     })
 
-    val compmod = Module(new CompMod(width, (height / n), n))
-    val color = Module(new ColorMatch())
+    val compmod = Module(new CompMod(config, n, start_address))
+    val color = Module(new ColorMatch(config.maxiter))
 
     val k_valid = RegInit(0.B)
     val col_ready = RegInit(0.B)
@@ -33,14 +37,13 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
     compmod.io.xmid             := io.xmid
     compmod.io.ymid             := io.ymid
     compmod.io.zoom             := io.zoom
-    compmod.io.maxiter          := io.maxiter
     compmod.io.new_params       := io.new_params
+    //compmod.io.start_address    := io.start_address
+    compmod.io.start_address    := start_address.U
     compmod.io.ready            := color.io.ready
-    compmod.io.start_address    := io.start_address
 
     color.io.k_in       := compmod.io.k_out
     color.io.valid_in   := compmod.io.valid
-    color.io.maxiter_in := io.maxiter
     color.io.buffer_ready := buffer.io.WriteData.ready
 
     io.rgb_out      := color.io.rgb_out
@@ -78,7 +81,8 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
         io.tilelink_out.a.bits.param := 0.U //NA
         io.tilelink_out.a.bits.size := 1023.U //Full buffer write
         io.tilelink_out.a.bits.source := 0.U //ID 0
-        io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
+        //io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
+        io.tilelink_out.a.bits.address := addroffsetreg + start_address.U
         io.tilelink_out.a.bits.mask := 0.U // Not masking any bits
     }
 
@@ -92,7 +96,8 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
                 io.tilelink_out.a.bits.param := 0.U //NA
                 io.tilelink_out.a.bits.size := 1023.U //Full buffer write
                 io.tilelink_out.a.bits.source := 0.U //ID 0
-                io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
+                //io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
+                io.tilelink_out.a.bits.address := addroffsetreg + start_address.U
                 io.tilelink_out.a.bits.mask := 0.U // Not masking any bits
                 io.tilelink_out.a.bits.data := buffer.io.ReadData.response.bits.readData // Reading directly from buffer
                 io.tilelink_out.a.bits.corrupt := !buffer.io.ReadData.response.valid // Corrupt if buffer empty

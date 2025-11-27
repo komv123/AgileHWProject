@@ -20,15 +20,26 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
     //val bufferPointer = Input(UInt(log2Ceil(c.bufferSize).W))
     val framePointer = Input(UInt(24.W))
 
-    val xmid    = Input(SInt(64.W))
-    val ymid    = Input(SInt(64.W))
-    val zoom        = Input(SInt(64.W))
-    val maxiter     = Input(UInt(16.W))
+    //val xmid    = Input(SInt(64.W))
+    //val ymid    = Input(SInt(64.W))
+    //val zoom        = Input(SInt(64.W))
+    val xmid    = Input(SInt(32.W))
+    val ymid    = Input(SInt(32.W))
+    val zoom        = Input(SInt(32.W))
+
+    //val maxiter     = Input(UInt(16.W))
     val new_params  = Input(Bool())
   })
 
+  // Create compute config inline
+  val computeConfig = ComputeConfig(
+    width = width,
+    height = height,
+    maxiter = 1000
+  )
+
   val videoBuffer = Module(new VideoBuffer(config))
-  val cu = Seq.fill(n)(Module(new CompColorWrapper(width, height, n)(c)))
+  val cu = Seq.tabulate(n)(i => Module(new CompColorWrapper(computeConfig, n, width * (height / n) * i)(c)))
 
 
   val xbarConfig = TLXbarConfig(
@@ -57,12 +68,12 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
     module.io.xmid := io.xmid
     module.io.ymid := io.ymid
     module.io.zoom := io.zoom
-    module.io.maxiter := io.maxiter
+    //module.io.maxiter := io.maxiter
     module.io.new_params := io.new_params
   }
 
-  for (i <- 0 until n) {
-    //cu(i).io.start_address := (1024 * i).U
-    cu(i).io.start_address := (width * (height / n) * i).U
-  }
+  //for (i <- 0 until n) {
+  //  //cu(i).io.start_address := (1024 * i).U
+  //  cu(i).io.start_address := (width * (height / n) * i).U
+  //}
 }
