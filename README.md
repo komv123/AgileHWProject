@@ -58,10 +58,10 @@ open out/Visualizer/test/test.dest/sandbox/frame-0.png
 
 ## Synthesis
 This repository contains supports two different open-source synthesis flows for generating bitstreams for an FPGA.
-The one provided in the developement environment is called openXC7 and works very well but supports only a few FPGAs.
+The one provided in the Nix development environment is called openXC7 and works very well but supports only a few FPGAs.
 The other one is F4PGA which is tedious to work with and has to be manually installed but it supports a larger set FPGAs.
-This README contains a [section](#installing-f4pga) on how to install the F4PGA tools.
-You can set the synthesis tool in the `config.mk` file and then run.
+If you want to use the F4PGA tools this README contains a [section](#installing-f4pga) on how to install the F4PGA tools.
+You can set the synthesis tool in the `config.mk` file.
 
 ## Generating SystemVerilog from Chisel
 Right now most synthesis tools only accepts less abstract HDLs like SystemVerilog.
@@ -75,7 +75,7 @@ make rtl
 This will create a directory called ```rtl/``` where the SystemVerilog files are located.
 
 ## Synthesizing the design
-Right now, this repository supports [Basys3](https://digilent.com/reference/programmable-logic/basys-3/reference-manual) and [Nexys A7](https://digilent.com/reference/programmable-logic/nexys-a7/start) board.
+Right now, this repository supports the [Basys3](https://digilent.com/reference/programmable-logic/basys-3/reference-manual) and [Nexys A7](https://digilent.com/reference/programmable-logic/nexys-a7/start)(F4PGA only) board.
 To synthsize the design just run following command:
 
 ```shell
@@ -86,7 +86,7 @@ This will create the directory ```synth/build/<target-fpga>``` with a bitstream 
 
 ## Programming the FPGA
 The build directory contains a lot of files but the most interesting one is the ```Visualizer.bit``` which is the bitstream file.
-This is the file that is used programmed to the FPGA when it is programmed.
+This is the file that is used to program the FPGA.
 To program the FPGA plug in your FPGA via USB and run following command:
 
 ```shell
