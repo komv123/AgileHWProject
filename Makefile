@@ -1,3 +1,5 @@
+-include config.mk
+
 # Tools
 MILL        = mill
 MILL_FLAGS  = --no-server
