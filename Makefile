@@ -1,8 +1,8 @@
 -include config.mk
 
 # Tools
-MILL        = mill
-MILL_FLAGS  = --no-server
+MILL        ?= mill
+MILL_FLAGS  ?= --no-server
 SYNTH_TOOL  ?= openxc7
 
 # Directories
