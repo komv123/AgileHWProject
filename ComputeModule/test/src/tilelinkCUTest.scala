@@ -36,7 +36,6 @@ class TLCUSpec extends AnyFlatSpec with ChiselSim {
 
             for (i <- 0 until 1024){
                 val rgb = dut.io.tilelink_out.a.bits.data.peek().litValue
-                println(f"RGB: ${rgb}%03X")
                 val r = (rgb >> 8) & 0xF
                 val g = (rgb >> 4) & 0xF
                 val b = rgb & 0xF
@@ -99,7 +98,6 @@ class TLCUSpec extends AnyFlatSpec with ChiselSim {
 
                 for (i <- 0 until 1024){
                     val rgb = dut.io.tilelink_out.a.bits.data.peek().litValue
-                    println(f"RGB: ${rgb}%03X")
                     val r = (rgb >> 8) & 0xF
                     val g = (rgb >> 4) & 0xF
                     val b = rgb & 0xF
@@ -164,7 +162,6 @@ class TLCUSpec extends AnyFlatSpec with ChiselSim {
 
                 for (i <- 0 until 1024){
                     val rgb = dut.io.tilelink_out.a.bits.data.peek().litValue
-                    println(f"RGB: ${rgb}%03X")
                     val r = (rgb >> 8) & 0xF
                     val g = (rgb >> 4) & 0xF
                     val b = rgb & 0xF
