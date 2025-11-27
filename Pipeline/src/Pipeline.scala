@@ -43,4 +43,6 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
   cu.io.zoom := io.zoom
   cu.io.maxiter := io.maxiter
   cu.io.new_params := io.new_params 
+
+  cu.io.start_address := 0.U
 }
