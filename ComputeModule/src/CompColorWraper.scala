@@ -85,10 +85,9 @@ class CompColorWrapper(width: Int, height: Int, n: Int)(implicit c: Configuratio
     switch(stateReg){
         is(State.IDLE){
             // Buffer full
-            
-            io.tilelink_out.a.valid := true.B
-
             when(!buffer.io.WriteData.ready) {
+                io.tilelink_out.a.valid := true.B
+
                 io.tilelink_out.a.bits.opcode := 0.U //FullPut
                 io.tilelink_out.a.bits.param := 0.U //NA
                 io.tilelink_out.a.bits.size := 1023.U //Full buffer write

@@ -103,9 +103,7 @@ class VideoBuffer(config: Configuration) extends Module{
       }
     }
     is(2.U){ // Send ack
-
-      io.tilelink.a.ready := 0.U
-      io.tilelink.d.valid := 1.U
+      io.tilelink.d.valid := true.B 
 
 
       io.tilelink.d.bits.opcode := 0.U //AccessAck

@@ -176,7 +176,7 @@ object RRArbiter {
 
 object RRLockArbiter {
   def apply[T <: Data](requests: Seq[DecoupledIO[T]]): DecoupledIO[T] = {
-    val arb = Module(new LockingRRArbiter(chiselTypeOf(requests.head.bits), requests.size, count = 1023,
+    val arb = Module(new LockingRRArbiter(chiselTypeOf(requests.head.bits), requests.size, count = 1024,
     needsLock = Some((data: T) => {
       // Lock when size = 1023 (indicating a 1024-beat burst)
       data.asInstanceOf[Tilelink_A].size === 1023.U

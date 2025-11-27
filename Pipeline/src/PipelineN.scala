@@ -35,7 +35,8 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
     nMasters = n,
     slaves = Seq(
       TLSlaveConfig(Seq((0x0000, 0xFFFF)))  // Full address space
-    )
+    ),
+    arbiterPolicy = "lock"
   )(config)
 
   val xbar = Module(new TLXbar(xbarConfig))

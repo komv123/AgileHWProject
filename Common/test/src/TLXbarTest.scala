@@ -500,7 +500,7 @@ class TLXbarTester extends AnyFlatSpec with Matchers with ChiselSim {
       dut.clock.step()
 
       // Continue sending burst from Master 0 (1023 more transfers)
-      for (i <- 0 until 1022) {
+      for (i <- 0 until 1023) {
         dut.io.in(0).a.ready.expect(true.B)
         dut.io.in(1).a.ready.expect(false.B)
 
