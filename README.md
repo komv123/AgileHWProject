@@ -12,6 +12,28 @@ You can use the Flake provided in this repository to install all dependencies in
 ```shell
 nix develop
 ```
+If you also want the synthesis tools in your development environment you can those the openxc7 shell instead:
+
+```shell
+nix develop .#openxc7
+```
+
+## Configuration file
+You can configure the repository to match what you want to do.
+Create a file in the root of the repository called `config.mk`.
+Here is an example of how it can look:
+```make
+MILL = ./mill # Use another install of mill
+SYNTH_TOOL = openxc7 # can be either openxc7 or f4pga
+
+# Set the top module for verilog generation
+TOP_MODULE = Visualizer
+
+# Set the FPGA target
+FAMILY  = artix7
+PART    = xc7a35tcpg236-1
+BOARD   = basys3
+```
 
 ## Testing
 Open a terminal in the directory and run:
@@ -34,22 +56,12 @@ This specific test and some other tests generate a visual output which you can s
 open out/Visualizer/test/test.dest/sandbox/frame-0.png
 ```
 
-## Installing F4PGA
-The synthesis is done with [F4PGA](https://f4pga.org/) which needs to be installed.
-This reposistory can install the tools automatically since these cannot be managed with Nix.
-To install the tool run:
-
-```shell
-make install
-```
-
-This will create the directory ```f4pga/tools``` and ```f4pga/f4pga-examples``` which contains all the neccessary tools.
-The tools only needs to be installed once.
-If you already have the tools installed see [Tips](#Tools)
-
-## Checks before running the code
-For now the top module is set to be ```Visualizer/Visualizer.scala``` for testing the workflow because we still don't have a VGA top module.
-It can be later changed in the ```config.mk``` file:
+## Synthesis
+This repository contains supports two different open-source synthesis flows for generating bitstreams for an FPGA.
+The one provided in the Nix development environment is called openXC7 and works very well but supports only a few FPGAs.
+The other one is F4PGA which is tedious to work with and has to be manually installed but it supports a larger set FPGAs.
+If you want to use the F4PGA tools this README contains a [section](#installing-f4pga) on how to install the F4PGA tools.
+You can set the synthesis tool in the `config.mk` file.
 
 ## Generating SystemVerilog from Chisel
 Right now most synthesis tools only accepts less abstract HDLs like SystemVerilog.
@@ -63,23 +75,39 @@ make rtl
 This will create a directory called ```rtl/``` where the SystemVerilog files are located.
 
 ## Synthesizing the design
-Right now, this repository only supports the [Nexys A7](https://digilent.com/reference/programmable-logic/nexys-a7/start) board.
+Right now, this repository supports the [Basys3](https://digilent.com/reference/programmable-logic/basys-3/reference-manual) and [Nexys A7](https://digilent.com/reference/programmable-logic/nexys-a7/start)(F4PGA only) board.
 To synthsize the design just run following command:
 
 ```shell
 make synth
 ```
 
-This will create the directory ```synth/build/nexys-a7-100t/```.
+This will create the directory ```synth/build/<target-fpga>``` with a bitstream among other files.
 
 ## Programming the FPGA
 The build directory contains a lot of files but the most interesting one is the ```Visualizer.bit``` which is the bitstream file.
-This is the file that is used programmed to the FPGA when it is programmed.
+This is the file that is used to program the FPGA.
 To program the FPGA plug in your FPGA via USB and run following command:
 
 ```shell
 make program
 ```
+
+If you encounter problems you try running it as root or see [Troubleshooting](#troubleshooting) if you prefer not to run random programs as root.
+
+## Installing F4PGA
+In order to synthesize with [F4PGA](https://f4pga.org/) it needs to be installed.
+This reposistory can install the tools automatically since these cannot be managed with Nix.
+First set the synthesis tool `SYNTH_TOOL = f4pga` in `config.mk`.
+To install the tool run:
+
+```shell
+make install
+```
+
+This will create the directory ```synth/f4pga/tools``` and ```synth/f4pga/f4pga-examples``` which contains all the neccessary tools.
+The tools only needs to be installed once.
+If you already have the tools installed see [Tips](#Tools)
 
 ## Tips
 ### Tools

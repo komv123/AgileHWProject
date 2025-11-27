@@ -2,6 +2,7 @@
 .bsp
 .metals
 .vscode
+.mill-version
 out
 target
 project
@@ -9,12 +10,10 @@ test_run_dir
 build
 .scalafmt.conf
 .scala-build
-/f4pga/tools/
-/f4pga/f4pga-examples/
 .DS_Store
 build/
 rtl/
 synth/build/
+synth/chipdb/
+synth/f4pga/
 *.gtkw
-
-Device.sv
