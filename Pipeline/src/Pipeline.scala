@@ -29,7 +29,7 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
 
   val videoBuffer = Module(new VideoBuffer(config))
   val mmu = Module(new MMU()(config))
-  val cu = Module(new CompColorWrapper(width, height, 0)(c))
+  val cu = Module(new CompColorWrapper(width, height, 1)(c))
 
   mmu.io.tilelink_in <> cu.io.tilelink_out
   videoBuffer.io.tilelink <> mmu.io.tilelink_out

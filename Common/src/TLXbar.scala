@@ -15,6 +15,8 @@ case class TLXbarConfig(
   arbiterPolicy: String = "roundRobin" // or "lowestIndexFirst"
 )(implicit val c: Configuration)
 
+
+
 class TLXbar(config: TLXbarConfig) extends Module {
   val io = IO(new Bundle {
     val in = Flipped(Vec(config.nMasters, new Tilelink()(config.c)))
@@ -68,6 +70,8 @@ class TLXbar(config: TLXbarConfig) extends Module {
     }
   )
 
+  val lockReg = Reg(Vec(config.slaves.size, Vec(config.nMasters, Bool())))
+
   // =========================================================================
   // Intermediate Wires with Transformed IDs
   // =========================================================================
@@ -111,8 +115,12 @@ class TLXbar(config: TLXbarConfig) extends Module {
   // =========================================================================
   // A Channel Arbitration (Master -> Slave)
   // =========================================================================
+  
+  //val arbiterFn: Seq[DecoupledIO[Tilelink_A]] => DecoupledIO[Tilelink_A] = 
+  //  RRLockArbiter.apply
+  
   val arbiterFn: Seq[DecoupledIO[Tilelink_A]] => DecoupledIO[Tilelink_A] = 
-    if (config.arbiterPolicy == "roundRobin") RRArbiter.apply else Arbiter.apply
+    if (config.arbiterPolicy == "roundRobin") RRArbiter.apply else if (config.arbiterPolicy == "lock") RRLockArbiter.apply else Arbiter.apply
 
   io.out.zipWithIndex.foreach { case (slaveOut, slaveIdx) =>
     val requests = masterToSlave.map(_(slaveIdx))
@@ -153,6 +161,7 @@ class TLXbar(config: TLXbarConfig) extends Module {
   (masterD zip slaveToMaster.transpose).foreach { case (mD, responses) =>
     mD <> dArbiterFn(responses)
   }
+
 }
 
 // Helper: Round-robin arbiter
@@ -163,6 +172,74 @@ object RRArbiter {
     arb.io.out
   }
 }
+
+
+object RRLockArbiter {
+  def apply[T <: Data](requests: Seq[DecoupledIO[T]]): DecoupledIO[T] = {
+    val arb = Module(new LockingRRArbiter(chiselTypeOf(requests.head.bits), requests.size, count = 1024,
+    needsLock = Some((data: T) => {
+      // Lock when size = 1023 (indicating a 1024-beat burst)
+      data.asInstanceOf[Tilelink_A].size === 1023.U
+    })))
+
+    arb.io.in.zip(requests).foreach { case (in, req) => in <> req }
+    arb.io.out
+  }
+}
+
+/*
+object RRLockArbiter {
+
+  class ArbiterIO[T <: Data](private val gen: T, val n: Int) extends Bundle {
+    val in = Flipped(Vec(n, Decoupled(gen)))
+    val out = Decoupled(gen)
+    val chosen = Output(UInt(log2Ceil(n).W))
+  }
+
+  class TLLockingRRArbiter[T <: Data](val gen: T, val n: Int) extends Module {
+    override def desiredName = s"Arbiter${n}_${gen.typeName}"
+  
+    val io = IO(new ArbiterIO(gen, n))
+
+
+
+
+
+  
+    io.chosen := (n - 1).asUInt
+    io.out.bits := io.in(n - 1).bits
+    for (i <- n - 2 to 0 by -1) {
+      when(io.in(i).valid) {
+        io.chosen := i.asUInt
+        io.out.bits := io.in(i).bits
+      }
+    }
+  
+    val grant = ArbiterCtrl(io.in.map(_.valid))
+    for ((in, g) <- io.in.zip(grant))
+      in.ready := g && io.out.ready
+    io.out.valid := !grant.last || io.in.last.valid
+  }
+
+
+
+
+  def apply[T <: Data](requests: Seq[DecoupledIO[T]]): DecoupledIO[T] = {
+    val arb = Module(new LockingRRArbiter(chiselTypeOf(requests.head.bits), requests.size, count = 1023,
+    needsLock = Some((data: T) => {
+      // Lock when size = 1023 (indicating a 1024-beat burst)
+      data.asInstanceOf[Tilelink_A].size === 1023.U
+    })))
+
+    arb.io.in.zip(requests).foreach { case (in, req) => in <> req }
+    arb.io.out
+  }
+}
+*/
+
+
+
+
 
 // Helper: Priority arbiter (lowest index first)
 object Arbiter {

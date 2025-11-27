@@ -59,21 +59,20 @@ class MMU(implicit config: Configuration) extends Module{
     val framePointer = Input(UInt(24.W))
   })
 
-  // Direct connection of tilelink interfaces
-  io.tilelink_out <> io.tilelink_in
-
-  io.tilelink_out.a.valid := false.B
-
-  //val inScope = isInScope(io.tilelink_in.a.bits.address, io.tilelink_in.a.bits.size, io.framePointer, bufferSize)
+  // Check if access is in scope
   val inScope = MMU.isInScope(io.tilelink_in.a.bits.address, io.tilelink_in.a.bits.size, io.framePointer)(config)
+
+  // Always translate the address combinationally (no dependency on ready)
+  val translatedAddress = MMU.translateAddress(io.tilelink_in.a.bits.address, io.framePointer, io.bufferPointer)(config)
+
+  // A channel: pass through with translated address
+  io.tilelink_out.a.valid := io.tilelink_in.a.valid && inScope
+  io.tilelink_out.a.bits := io.tilelink_in.a.bits
+  io.tilelink_out.a.bits.address := translatedAddress  // Always drive translated address
 
   io.tilelink_in.a.ready := io.tilelink_out.a.ready && inScope
 
-  // Address override with higher priority (placed after the <> connection)
-  when(io.tilelink_in.a.valid && io.tilelink_in.a.ready) {
-    io.tilelink_out.a.valid := io.tilelink_in.a.valid
-
-    io.tilelink_out.a.bits.address := MMU.translateAddress(io.tilelink_in.a.bits.address, io.framePointer, io.bufferPointer)(config)
-  }
+  // D channel: pass through unchanged
+  io.tilelink_in.d <> io.tilelink_out.d
 }
 

@@ -7,7 +7,7 @@ import scala.util.control.Breaks._
 
 import Pipeline._
 
-class PipelineTest extends AnyFlatSpec with ChiselSim {
+class PipelineNTest extends AnyFlatSpec with ChiselSim {
     /*
     "Pipeline" should "render 32 x 32 " in {
         simulate(new Pipeline(32, 32)) { dut =>
@@ -54,8 +54,9 @@ class PipelineTest extends AnyFlatSpec with ChiselSim {
             writer.close()
         }
     }
+    */
     "Pipeline" should "render 64 x 64 " in {
-        simulate(new Pipeline(64, 64)) { dut =>
+        simulate(new PipelineN(64, 64, 2)) { dut =>
             val writer = new PrintWriter("output64_64.ppm")
 
             // PPM header
@@ -109,6 +110,7 @@ class PipelineTest extends AnyFlatSpec with ChiselSim {
             writer.close()
         }
     }
+    /*
     "Pipeline" should "render 128 x 128 " in {
         simulate(new Pipeline(128, 128)) { dut =>
             val writer = new PrintWriter("output128_128.ppm")
