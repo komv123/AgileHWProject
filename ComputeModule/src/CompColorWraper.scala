@@ -39,7 +39,7 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(implic
     compmod.io.zoom             := io.zoom
     compmod.io.new_params       := io.new_params
     //compmod.io.start_address    := io.start_address
-    compmod.io.start_address    := start_address.U
+    //compmod.io.start_address    := start_address.U
     compmod.io.ready            := color.io.ready
 
     color.io.k_in       := compmod.io.k_out

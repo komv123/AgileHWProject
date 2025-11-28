@@ -8,14 +8,14 @@ import scala.annotation.switch
 class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module {
     // Extract parameters from config
     val width = config.width
-    val height = config.height
+    val height = config.height / n  // Each CU handles height/n rows
     val maxiter = config.maxiter
     val io = IO(new Bundle {
         val xmid    = Input(SInt(32.W))
         val ymid    = Input(SInt(32.W))
         val zoom        = Input(SInt(32.W))
         val new_params  = Input(Bool())
-        val start_address = Input(UInt(24.W))
+        //val start_address = Input(UInt(24.W))
 
         val ready = Input(Bool())
 
@@ -97,7 +97,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val ymin_next = io.ymid - y_offset
             val ymax_next = io.ymid + y_offset
             
-            val position = io.start_address / addr_maxCU
+            val position = start_address.U / addr_maxCU
 
             val y_window = (ymax_next - ymin_next) / n.S
 
