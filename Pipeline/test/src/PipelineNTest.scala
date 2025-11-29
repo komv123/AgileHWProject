@@ -55,7 +55,7 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
         }
     }
     */
-    
+    /*
     "Pipeline" should "render 64 x 64 " in {
         simulate(new PipelineN(64, 64, 2)) { dut =>
             val writer = new PrintWriter("output64_64.ppm")
@@ -136,26 +136,33 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
             //dut.io.ymid.poke(0L.S)
             //dut.io.zoom.poke(8589934592L.S)
             
-            dut.io.xmid.poke(-87818.S)
-            dut.io.ymid.poke(0.S)
-            dut.io.zoom.poke(131072.S)
+            // dut.io.xmid.poke(-87818.S)
+            // dut.io.ymid.poke(0.S)
+            // dut.io.zoom.poke(131072.S)
 
             //dut.io.maxiter.poke(1000.U)
 
+            dut.io.select.poke(1.U)
+            dut.io.enter.poke(1.B)
+            dut.clock.step(5)
+            dut.io.enter.poke(0.B)
+
             var framePointer = 0 
 
-            dut.io.new_params.poke(1.B)
+            // dut.io.new_params.poke(1.B)
 
-            dut.clock.step(5)
-            dut.io.new_params.poke(0.B)
+            // dut.clock.step(5)
+            // dut.io.new_params.poke(0.B)
+            for(i <- 0 until 8
+            ){dut.clock.step(1000000)}
 
             for(i <- 0 until 16){ 
               dut.io.framePointer.poke(framePointer.U)
               //dut.io.bufferPointer.poke(bufferPointer.U)
 
-              breakable{for (i <- 0 until 1000000) {
-                  dut.clock.step(1)
-              }}
+            //   breakable{for (i <- 0 until 1000000) {
+            //       dut.clock.step(1)
+            //   }}
 
               //if(i == 0){
               //  dut.io.ReadData.request.valid.poke(true.B)
@@ -183,13 +190,14 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
             writer.close()
         }
     }
+    /*
     "Pipeline" should "render 320 x 320 " in {
-        simulate(new PipelineN(320, 320, 10)) { dut =>
+        simulate(new PipelineN(320, 320, 20)) { dut =>
             val writer = new PrintWriter("output640_480.ppm")
 
             // PPM header
             writer.println("P3")
-            writer.println("640 480")
+            writer.println("320 320")
             writer.println("15")
 
             //dut.io.xmid.poke(-5755256176L.S)
@@ -247,5 +255,6 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
 
             writer.close()
         }
-    }*/
+    }
+    */
 }
