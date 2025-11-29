@@ -68,7 +68,7 @@ class FixedMul extends Module {
   })
 
   val product = io.a * io.b
-  io.result := product >> 16
+  io.result := product(63,32) 
 }
 
 // The actual module using the pipeline object
