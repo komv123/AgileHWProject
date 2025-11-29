@@ -10,8 +10,6 @@ class AmplitudeInputMapper(
     startZoom: Int = 21474836
 ) extends Module {
   val io = IO(new Bundle {
-    // ADD THIS: Explicit Input for the microphone signal
-    // Flipped() reverses the direction, so 'Output' becomes 'Input'
     val micIO = Flipped(new SoundInputSignalIO())
 
     val userInput = Valid(new UserInputPosition(32))
