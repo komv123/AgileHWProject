@@ -5,6 +5,7 @@ import chisel3.simulator.EphemeralSimulator._
 import chisel3.simulator.scalatest.ChiselSim
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
+import sound_input.PdmMicrophone
 
 class PdmMicrophoneTester extends AnyFlatSpec with Matchers with ChiselSim {
   behavior of "PdmMicrophone"
