@@ -23,21 +23,21 @@ class NexysDirectionalKeys(
   val (tickValue, tickWrap) = Counter(true.B, tickDelay)
   val centerXReg = RegInit(startCenterX.S(32.W))
   val centerYReg = RegInit(startCenterY.S(32.W))
-  val zoomReg = RegInit(startZoom.U(32.W))
+  val zoomReg = RegInit(startZoom.S(32.W))
 
   when(tickWrap) {
     when(io.midButton) {
       // Zoom mode
       when(io.upButton) {
-        zoomReg := zoomReg - zoomMultiplier.U
+        zoomReg := zoomReg - zoomMultiplier.S
       }.elsewhen(io.downButton) {
-        zoomReg := zoomReg + zoomMultiplier.U
+        zoomReg := zoomReg + zoomMultiplier.S
       }
 
       when(io.leftButton) {
-        zoomReg := zoomReg - (zoomMultiplier * 10).U
+        zoomReg := zoomReg - (zoomMultiplier * 10).S
       }.elsewhen(io.rightButton) {
-        zoomReg := zoomReg + (zoomMultiplier * 10).U
+        zoomReg := zoomReg + (zoomMultiplier * 10).S
       }
     }.otherwise {
       // Move mode

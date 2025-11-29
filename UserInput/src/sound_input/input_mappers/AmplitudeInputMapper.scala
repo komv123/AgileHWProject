@@ -18,14 +18,14 @@ class AmplitudeInputMapper(
   // Default state
   val centerXReg = RegInit(startCenterX.S(32.W))
   val centerYReg = RegInit(startCenterY.S(32.W))
-  val zoomReg = RegInit(startZoom.U(32.W))
+  val zoomReg = RegInit(startZoom.S(32.W))
 
   when(io.micIO.valid) {
     when(io.micIO.amplitude > threshold) {
-      zoomReg := zoomReg + (io.micIO.amplitude * 100.U)
+      zoomReg := zoomReg + (io.micIO.amplitude * 100.S)
     }.otherwise {
-      when(zoomReg > 1000.U) {
-        zoomReg := zoomReg - 100.U
+      when(zoomReg > 1000.S) {
+        zoomReg := zoomReg - 100.S
       }
     }
   }

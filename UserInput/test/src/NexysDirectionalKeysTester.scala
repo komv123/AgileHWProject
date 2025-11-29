@@ -23,7 +23,7 @@ class NexysDirectionalKeysTester
     ) { dut =>
       dut.io.userInput.bits.xmid.expect(100.S)
       dut.io.userInput.bits.ymid.expect(100.S)
-      dut.io.userInput.bits.zoom.expect(5000.U)
+      dut.io.userInput.bits.zoom.expect(5000.S)
     }
   }
 
@@ -55,7 +55,7 @@ class NexysDirectionalKeysTester
         dut.io.midButton.poke(true.B)
         dut.io.downButton.poke(true.B)
         dut.clock.step(1)
-        dut.io.userInput.bits.zoom.expect(21000.U)
+        dut.io.userInput.bits.zoom.expect(21000.S)
     }
   }
 

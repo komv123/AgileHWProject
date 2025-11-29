@@ -53,7 +53,7 @@ class MicrophoneInputProcessorThresholdTester
       dut.amplitudeIn.poke(0.U)
       dut.validIn.poke(false.B)
       dut.clock.step(1)
-      dut.io.userInput.bits.zoom.expect(5000.U)
+      dut.io.userInput.bits.zoom.expect(5000.S)
     }
   }
 
@@ -63,7 +63,7 @@ class MicrophoneInputProcessorThresholdTester
       dut.validIn.poke(true.B)
       dut.clock.step(1)
       // 5000 + (20 * 100) = 7000
-      dut.io.userInput.bits.zoom.expect(7000.U)
+      dut.io.userInput.bits.zoom.expect(7000.S)
     }
   }
 
@@ -73,7 +73,7 @@ class MicrophoneInputProcessorThresholdTester
       dut.validIn.poke(true.B)
       dut.clock.step(1)
       // 5000 - 100 = 4900
-      dut.io.userInput.bits.zoom.expect(4900.U)
+      dut.io.userInput.bits.zoom.expect(4900.S)
     }
   }
 
@@ -83,7 +83,7 @@ class MicrophoneInputProcessorThresholdTester
       dut.validIn.poke(true.B)
       // Step enough times to force it down (5000 -> 1000 takes 40 steps)
       dut.clock.step(50)
-      dut.io.userInput.bits.zoom.expect(1000.U)
+      dut.io.userInput.bits.zoom.expect(1000.S)
     }
   }
 
@@ -92,7 +92,7 @@ class MicrophoneInputProcessorThresholdTester
       dut.amplitudeIn.poke(50.U)
       dut.validIn.poke(false.B) // Invalid!
       dut.clock.step(1)
-      dut.io.userInput.bits.zoom.expect(5000.U)
+      dut.io.userInput.bits.zoom.expect(5000.S)
     }
   }
 }
