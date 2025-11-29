@@ -68,7 +68,8 @@ class FixedMul extends Module {
   })
 
   val product = io.a * io.b
-  io.result := product(63,32) 
+  //io.result := product(63,32).asSInt
+  io.result := product >> 16
 }
 
 // The actual module using the pipeline object
@@ -361,7 +362,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val xmin_next = xmid - (zoom >> 1)
             val xmax_next = xmid + (zoom >> 1)
             // Use fixed_mul to compute 3/8 * zoom without overflow
-            val y_offset = fixed_mul(zoom, three_eighths)
+            //val y_offset = fixed_mul(zoom, three_eighths)
+            val y_offset = (zoom >> 1)
             val ymin_next = ymid - y_offset
             val ymax_next = ymid + y_offset
             
@@ -371,7 +373,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             //NOTE REALLY BAD
             val y_window = (ymax_next - ymin_next) / n.S
 
-            val ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
+            //val ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
+            val ymin_cu_next = ymax_next - (y_window * (position + 1.U))
             val ymax_cu_next = ymax_next - (y_window * position)
 
             xmin := xmin_next
@@ -381,6 +384,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
 
             dx := (xmax_next - xmin_next) / width.S
             dy := (ymax_cu_next - ymin_cu_next) / height.S
+            //dy := (ymax - ymin) / height.S
 
             //j := 0.S
             j := 0.U

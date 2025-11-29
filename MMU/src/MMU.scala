@@ -35,7 +35,7 @@ object MMU {
   
     //val lo = loRange(virtualAddr, framePointer, c.bufferSize) 
     val lo = loRange(virtualAddr, framePointer)(config) 
-    val hi = (virtualAddr + writeSize) < (framePointer + config.bufferSize.U) // We ignore overflow here
+    val hi = (virtualAddr + writeSize) <= (framePointer + config.bufferSize.U) // We ignore overflow here
   
     val inscope = lo && hi
   

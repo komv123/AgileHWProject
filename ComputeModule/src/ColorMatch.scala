@@ -123,8 +123,9 @@ class ColorMatch(maxiter: Int) extends Module {
         is (LOOKUP) {
             // Scale k to LUT address (0-1023)
             // Map maxiter range to 1024 LUT entries
-            val scaled_addr = (k * 1024.U) / maxiter.U
-            lut_addr := scaled_addr(9, 0)  // Take lower 10 bits for 1024 entries
+            //val scaled_addr = (k * 1024.U) / maxiter.U
+            //lut_addr := scaled_addr(9, 0)  // Take lower 10 bits for 1024 entries
+            lut_addr := k  // Take lower 10 bits for 1024 entries
             stateReg := WAIT_MEM
         }
 
