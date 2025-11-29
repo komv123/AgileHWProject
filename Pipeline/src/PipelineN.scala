@@ -23,12 +23,15 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
     //val xmid    = Input(SInt(64.W))
     //val ymid    = Input(SInt(64.W))
     //val zoom        = Input(SInt(64.W))
-    val xmid    = Input(SInt(32.W))
-    val ymid    = Input(SInt(32.W))
-    val zoom        = Input(SInt(32.W))
+    // val xmid    = Input(SInt(32.W))
+    // val ymid    = Input(SInt(32.W))
+    // val zoom        = Input(SInt(32.W))
+
+    val select = Input(UInt(4.W))
+    val enter = Input(Bool())
 
     //val maxiter     = Input(UInt(16.W))
-    val new_params  = Input(Bool())
+    // val new_params  = Input(Bool())
   })
 
   // Create compute config inline
@@ -39,7 +42,8 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   )
 
   val videoBuffer = Module(new VideoBuffer(config))
-  val cu = Seq.tabulate(n)(i => Module(new CompColorWrapper(computeConfig, n, width * (height / n) * i)(c)))
+  val cu = Seq.tabulate(n)(i => Module(new CompColorWrapper(computeConfig, n, start_address = width * (height / n) * i)(c)))
+  val params = Module(new Parameters())
 
 
   val xbarConfig = TLXbarConfig(
@@ -63,13 +67,15 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   videoBuffer.io.tilelink <> mmu.io.tilelink_out
   io.ReadData <> videoBuffer.io.ReadData
 
+  params.io.select := io.select
+  params.io.enter := io.enter
 
   cu.foreach { module =>
-    module.io.xmid := io.xmid
-    module.io.ymid := io.ymid
-    module.io.zoom := io.zoom
+    module.io.xmid := params.io.xmid
+    module.io.ymid := params.io.ymid
+    module.io.zoom := params.io.zoom
     //module.io.maxiter := io.maxiter
-    module.io.new_params := io.new_params
+    module.io.id := params.io.id
   }
 
   //for (i <- 0 until n) {

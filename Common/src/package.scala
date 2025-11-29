@@ -18,7 +18,7 @@ package object Common {
   object Configuration {
     def default(): Configuration = {
       Configuration(
-        8192, // bufferSize
+        16384, // bufferSize
         307200, // frameSize
         2, // bufferWidth 2 bytes
         8 // sourceWidth
