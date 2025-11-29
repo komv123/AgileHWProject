@@ -247,7 +247,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         val xmid    = Input(SInt(32.W))
         val ymid    = Input(SInt(32.W))
         val zoom        = Input(SInt(32.W))
-        val new_params  = Input(Bool())
+        val id  = Input(UInt(4.W))
         //val start_address = Input(UInt(24.W))
 
         val ready = Input(Bool())
@@ -285,6 +285,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val xmid    = RegInit(0.S(32.W)) //(-3335440880L.S(32.W))
     val ymid    = RegInit(0.S(32.W)) //(586868269L.S(32.W))
     val zoom    = RegInit(0.S(32.W)) //(99484L.S(32.W))
+    val id      = RegInit(0.U(4.W))
+    val new_params = RegInit(0.B)
     //val maxiter = RegInit(1000.U(16.W)) //(1000.U(16.W))
 
     val xmin = RegInit(0.S(32.W))
@@ -324,6 +326,13 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     pipeline.io.in.bits := pipelineInput
     pipeline.io.clear_pipeline := false.B
 
+    when(io.id =/= id){
+      xmid := io.xmid
+      ymid := io.ymid
+      zoom := io.zoom
+      id := io.id
+      new_params := 1.B
+    }
 
     // *** FSM ***
     object State extends ChiselEnum {
@@ -335,16 +344,18 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
 
     switch(stateReg){
         is(IDLE){
-            when(io.new_params){stateReg := SETUP}
+            when(new_params){stateReg := SETUP}
         }
 
         is (SETUP) {
-            val xmin_next = io.xmid - (io.zoom >> 1)
-            val xmax_next = io.xmid + (io.zoom >> 1)
+            new_params := 0.B
+
+            val xmin_next = xmid - (zoom >> 1)
+            val xmax_next = xmid + (zoom >> 1)
             // Use fixed_mul to compute 3/8 * zoom without overflow
-            val y_offset = fixed_mul(io.zoom, three_eighths)
-            val ymin_next = io.ymid - y_offset
-            val ymax_next = io.ymid + y_offset
+            val y_offset = fixed_mul(zoom, three_eighths)
+            val ymin_next = ymid - y_offset
+            val ymax_next = ymid + y_offset
             
             val position = start_address.U / addr_maxCU
 
