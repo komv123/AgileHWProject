@@ -17,13 +17,20 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(implic
 
         val rgb_out     = Output(UInt(12.W))
         val valid_out   = Output(Bool())
-        val k_out       = Output(UInt(32.W))
-        val j_out       = Output(SInt(16.W))
+        //val k_out       = Output(UInt(32.W))
+        //val j_out       = Output(SInt(16.W))
 
         val tilelink_out = new Tilelink()(c)
     })
 
-    val compmod = Module(new CompMod(config, n, start_address))
+    val computeConfig_modified = ComputeConfig(
+      width = width,
+      height = height / n,
+      maxiter = 1000
+    )
+
+    //val compmod = Module(new CompMod(config, n, start_address))
+    val compmod = Module(new CompMod(computeConfig_modified, n, start_address))
     val color = Module(new ColorMatch(config.maxiter))
 
     val k_valid = RegInit(0.B)
@@ -46,8 +53,8 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(implic
 
     io.rgb_out      := color.io.rgb_out
     io.valid_out    := color.io.valid_out
-    io.k_out        := compmod.io.k_out
-    io.j_out        := compmod.io.j_out
+    //io.k_out        := compmod.io.k_out
+    //io.j_out        := compmod.io.j_out
 
     io.tilelink_out.a.valid := false.B
     io.tilelink_out.a.bits := DontCare

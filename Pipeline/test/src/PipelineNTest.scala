@@ -115,7 +115,6 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
         }
     }
     */
-    
     "Pipeline" should "render 128 x 128 " in {
         simulate(new PipelineN(128, 128, 4)) { dut =>
             val writer = new PrintWriter("output128_128.ppm")

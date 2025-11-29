@@ -241,7 +241,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
 
     // Extract parameters from config
     val width = config.width
-    val height = config.height / n  // Each CU handles height/n rows
+    //val height = config.height / n  // Each CU handles height/n rows
+    val height = config.height  // Each CU handles height/n rows
     val maxiter = config.maxiter
     val io = IO(new Bundle {
         val xmid    = Input(SInt(32.W))
@@ -254,8 +255,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
 
         val k_out       = Output(UInt(32.W))
         val valid       = Output(Bool())
-        val i_out       = Output(SInt(16.W))
-        val j_out       = Output(SInt(16.W))
+        //val i_out       = Output(SInt(16.W))
+        //val j_out       = Output(SInt(16.W))
     })
 
     /* Functions */
@@ -272,14 +273,18 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val three_eighths = 24576.S  // 3/8 = 0.375 in Q16.16 fixed-point
 
     val widthU = width.U
-    val heightU = height.U
+    val heightU = (height / n).U
     val nU = n.U
     val widthS = width.S
     val heightS = height.S
     val nS = n.S
 
-    val addr_max1 = width.U * (height.U * n.U)
-    val addr_maxCU = addr_max1 / n.U
+    //val addr_max1 = width.U * (height.U * n.U)
+    //val addr_max1 = (width * (height * n))
+    //val addr_max1 = width * height
+    //val addr_maxCU = addr_max1 / n.U
+    //val addr_maxCU = (addr_max1 / n)
+    val addr_maxCU = (width * height)
     
     /* Register declarations */
     val xmid    = RegInit(0.S(32.W)) //(-3335440880L.S(32.W))
@@ -295,8 +300,11 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val dx = RegInit(0.S(32.W))
     val dy = RegInit(0.S(32.W))
 
-    val i = RegInit(0.S(16.W))
-    val j = RegInit(0.S(16.W))
+    //val i = RegInit(0.S(16.W))
+    //val j = RegInit(0.S(16.W))
+
+    val i = RegInit(0.U(16.W))
+    val j = RegInit(0.U(16.W))
 
     val x = RegInit(0.S(32.W))
     val y = RegInit(0.S(32.W))
@@ -346,8 +354,10 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val ymin_next = io.ymid - y_offset
             val ymax_next = io.ymid + y_offset
             
-            val position = start_address.U / addr_maxCU
+            //val position = start_address.U / addr_maxCU
+            val position = (start_address / addr_maxCU).U
 
+            //NOTE REALLY BAD
             val y_window = (ymax_next - ymin_next) / n.S
 
             val ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
@@ -359,21 +369,25 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             ymax := ymax_cu_next
 
             dx := (xmax_next - xmin_next) / width.S
-            dy := (ymax_cu_next - ymin_cu_next) / height.S;
+            dy := (ymax_cu_next - ymin_cu_next) / height.S
 
-            j := 0.S
+            //j := 0.S
+            j := 0.U
 
             stateReg := YLOOP
         }
         
         is (YLOOP) {
             y := ymax - j * dy
-            i := 0.S
-            j := j + 1.S
+            //i := 0.S
+            i := 0.U
+            //j := j + 1.S
+            j := j + 1.U
 
-            when (j < height.S){stateReg := XLOOP} 
+            when (j < height.U){stateReg := XLOOP} 
             .otherwise {
-                j := 0.S
+                //j := 0.S
+                j := 0.U
                 stateReg := IDLE
             }
         }
@@ -382,9 +396,11 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             x := xmin + i * dx
 
             val valid_next = 0.B
-            val i_next = i + 1.S
+            //val i_next = i + 1.S
+            val i_next = i + 1.U
 
-            when (i < width.S) {
+            //when (i < width.S) {
+            when (i < width.U) {
               when (io.ready){
                 i := i_next
                 valid := valid_next
@@ -421,6 +437,6 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
 
     io.k_out := k_out
     io.valid := valid
-    io.i_out := i
-    io.j_out := j
+    //io.i_out := i
+    //io.j_out := j
 }
