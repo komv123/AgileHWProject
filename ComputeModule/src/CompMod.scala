@@ -14,7 +14,7 @@ object MandelbrotPipeline {
     val v = SInt(32.W)
     val u2 = SInt(32.W)
     val v2 = SInt(32.W)
-    val k = UInt()
+    val k = UInt(10.W)
     val x = SInt(32.W)
     val y = SInt(32.W)
   }
@@ -24,7 +24,7 @@ object MandelbrotPipeline {
     val v_next_partial = SInt(32.W)
     val u2 = SInt(32.W)
     val v2 = SInt(32.W)
-    val k = UInt()
+    val k = UInt(10.W)
     val y = SInt(32.W)
   }
 
@@ -34,11 +34,20 @@ object MandelbrotPipeline {
     val v_next = SInt(32.W)
     val v2_next = SInt(32.W)
     val k_next = UInt()
+  }
+
+  class Stage4Bundle extends Bundle {
+    val u2_next = SInt(32.W)
+    val v2_next = SInt(32.W)
+    val u_next = SInt(32.W)
+    val v_next = SInt(32.W)
+    //val k_next = UInt()
+    val k = UInt(10.W)
     val done = Bool()
   }
 
   class OutputBundle extends Bundle {
-    val k = UInt()
+    val k = UInt(10.W)
     val done = Bool()
     val u2_next = SInt(32.W)
     val v2_next = SInt(32.W)
@@ -69,6 +78,7 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
   val io = IO(new Bundle {
     val in = Flipped(Valid(new Stage1Bundle))
     val out = Valid(new OutputBundle)
+    val clear_pipeline = Input(Bool())  // Signal from FSM to clear pipeline
   })
 
   // Instantiate single hardware multiplier
@@ -94,39 +104,66 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
   val stage3_valid = RegInit(false.B)
   val stage3_data = Reg(new Stage3Bundle)
 
+  val stage4_valid = RegInit(false.B)
+  val stage4_data = Reg(new Stage4Bundle)
+
+  // Clear register for pipeline flushing (set when FSM exits ITERATE state)
+  //val clear = RegInit(VecInit(Seq.fill(2)(false.B)))
+  val clearReg = RegInit(false.B)
+
   // Default values for hardware multiplier (will be overridden by stages)
   hwMul.io.a := 0.S
   hwMul.io.b := 0.S
 
-  // Multiplexer control signal (which stage is using the multiplier)
-  val mul_stage = RegInit(0.U(2.W))
+  // Create input mux: select between external io.in and stage3 feedback
+  val stage1_input = Wire(new Stage1Bundle)
+
+  val use_feedback = stage3_valid
+
+  stage1_input := Mux(use_feedback,
+    // Feedback from stage3
+    {
+      val fb = Wire(new Stage1Bundle)
+      fb.u := stage3_data.u_next
+      fb.v := stage3_data.v_next
+      fb.u2 := stage3_data.u2_next
+      fb.v2 := stage3_data.v2_next
+      fb.k := stage3_data.k_next
+      fb.x := io.in.bits.x
+      fb.y := io.in.bits.y
+      fb
+    },
+    // External input
+    io.in.bits
+  )
+
+  clearReg := false.B //Default statemtn
 
   // Stage 1: Compute v*u using hardware multiplier
-  stage1_valid := io.in.valid
-  when(io.in.valid) {
+  
+  stage1_valid := (io.in.valid || stage3_valid) && !clearReg
+  when((io.in.valid || stage3_valid) && !clearReg) {
     // Mux inputs to hardware multiplier for stage 1
-    hwMul.io.a := io.in.bits.v
-    hwMul.io.b := io.in.bits.u
-    mul_stage := 1.U
+    hwMul.io.a := stage1_input.v
+    hwMul.io.b := stage1_input.u
 
     val stage1_result = Wire(new Stage2Bundle)
-    stage1_result.u_next := io.in.bits.u2 - io.in.bits.v2 + io.in.bits.x
+    stage1_result.u_next := stage1_input.u2 - stage1_input.v2 + stage1_input.x
     stage1_result.v_next_partial := hwMul.io.result
-    stage1_result.u2 := io.in.bits.u2
-    stage1_result.v2 := io.in.bits.v2
-    stage1_result.k := io.in.bits.k
-    stage1_result.y := io.in.bits.y
+    stage1_result.u2 := stage1_input.u2
+    stage1_result.v2 := stage1_input.v2
+    stage1_result.k := stage1_input.k
+    stage1_result.y := stage1_input.y
 
     stage1_data := stage1_result
   }
 
   // Stage 2: Compute u_next^2 using hardware multiplier
-  stage2_valid := stage1_valid
-  when(stage1_valid) {
+  stage2_valid := stage1_valid && !clearReg
+  when(stage1_valid && !clearReg) {
     // Mux inputs to hardware multiplier for stage 2
     hwMul.io.a := stage1_data.u_next
     hwMul.io.b := stage1_data.u_next
-    mul_stage := 2.U
 
     val stage2_result = Wire(new Stage3Bundle)
     stage2_result.v_next := (stage1_data.v_next_partial << 1) + stage1_data.y  // multiply by 2 using shift
@@ -134,18 +171,17 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
     stage2_result.u2_next := hwMul.io.result
     stage2_result.v2_next := 0.S  // Will be computed in stage 3
     stage2_result.k_next := stage1_data.k
-    stage2_result.done := false.B  // Will be computed in stage 3
 
     stage2_data := stage2_result
   }
 
-  // Stage 3: Compute v_next^2 using hardware multiplier and check convergence
-  stage3_valid := stage2_valid
-  when(stage2_valid) {
+  // Stage 3: Compute v_next^2 using hardware multiplier
+  // Output feeds back to stage1 via the mux
+  stage3_valid := stage2_valid && !clearReg
+  when(stage2_valid && !clearReg) {
     // Mux inputs to hardware multiplier for stage 3
     hwMul.io.a := stage2_data.v_next
     hwMul.io.b := stage2_data.v_next
-    mul_stage := 3.U
 
     val stage3_result = Wire(new Stage3Bundle)
     stage3_result.u2_next := stage2_data.u2_next
@@ -154,23 +190,46 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
     stage3_result.v_next := stage2_data.v_next
     stage3_result.k_next := stage2_data.k_next + 1.U
 
-    // Check convergence
-    val magnitude = stage3_result.u2_next + hwMul.io.result
-    val escaped = magnitude >= escape
-    val max_reached = stage3_result.k_next >= config.maxiter.U
-    stage3_result.done := escaped || max_reached
-
     stage3_data := stage3_result
   }
 
-  // Output directly from stage3
-  io.out.valid := stage3_valid
-  io.out.bits.done := stage3_data.done
-  io.out.bits.k := Mux(stage3_data.k_next >= config.maxiter.U, config.maxiter.U, stage3_data.k_next)
-  io.out.bits.u2_next := stage3_data.u2_next
-  io.out.bits.v2_next := stage3_data.v2_next
-  io.out.bits.u_next := stage3_data.u_next
-  io.out.bits.v_next := stage3_data.v_next
+  // Stage 4: Check convergence only
+  // Pass through values from stage3 and add done signal
+  stage4_valid := stage3_valid && !clearReg
+  when(stage3_valid && !clearReg) {
+    val stage4_result = Wire(new Stage4Bundle)
+    stage4_result.u2_next := stage3_data.u2_next
+    stage4_result.v2_next := stage3_data.v2_next
+    stage4_result.u_next := stage3_data.u_next
+    stage4_result.v_next := stage3_data.v_next
+    //stage4_result.k_next := stage3_data.k_next
+    stage4_result.k := Mux(stage3_data.k_next >= config.maxiter.U, config.maxiter.U, stage3_data.k_next)
+
+    // Check convergence
+    val magnitude = stage3_data.u2_next + stage3_data.v2_next
+    val escaped = magnitude >= escape
+    val max_reached = stage3_data.k_next >= config.maxiter.U
+
+    val done = escaped || max_reached
+    stage4_result.done := done
+
+    clearReg := done // Reset pipeline
+
+    stage4_data := stage4_result
+  }
+
+  when(clearReg){ //Reset done
+    stage4_data.done := false.B
+  }
+
+  // Output from stage4
+  io.out.valid := stage4_valid
+  io.out.bits.done := stage4_data.done
+  io.out.bits.k := stage4_data.k
+  io.out.bits.u2_next := stage4_data.u2_next
+  io.out.bits.v2_next := stage4_data.v2_next
+  io.out.bits.u_next := stage4_data.u_next
+  io.out.bits.v_next := stage4_data.v_next
 }
 
 
@@ -263,6 +322,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     // Default pipeline connections (will be overridden in FSM states)
     pipeline.io.in.valid := false.B
     pipeline.io.in.bits := pipelineInput
+    pipeline.io.clear_pipeline := false.B
 
 
     // *** FSM ***
@@ -345,28 +405,17 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         }
 
         is (ITERATE) {
-            // *** NEW PIPELINED COMPUTATION WITH STAGE3 FORWARDING ***
-            // Wait for pipeline output to be valid
-            when(pipeline.io.out.valid) {
-                // Check if iteration is done
-                when(pipeline.io.out.bits.done) {
-                    // Iteration complete, output result
-                    k_out := pipeline.io.out.bits.k
-                    valid := 1.B
-                    stateReg := XLOOP
-                }.otherwise {
-                    // Continue iterating - feed pipeline output back directly to stage1
-                    // This creates a forwarding path from stage3 output to stage1 input
-                    pipelineInput.u := pipeline.io.out.bits.u_next
-                    pipelineInput.v := pipeline.io.out.bits.v_next
-                    pipelineInput.u2 := pipeline.io.out.bits.u2_next
-                    pipelineInput.v2 := pipeline.io.out.bits.v2_next
-                    pipelineInput.k := pipeline.io.out.bits.k
-
-                    // Restart pipeline with new values
-                    pipeline.io.in.valid := true.B
-                }
+            // *** PIPELINED COMPUTATION WITH AUTOMATIC STAGE3 FEEDBACK ***
+            // The pipeline automatically feeds stage3 output back to stage1
+            // We only need to wait for the done signal from stage4
+            when(pipeline.io.out.valid && pipeline.io.out.bits.done) {
+                // Iteration complete, output result and clear pipeline
+                k_out := pipeline.io.out.bits.k
+                valid := 1.B
+                //pipeline.io.clear_pipeline := true.B  // Trigger pipeline clear
+                stateReg := XLOOP
             }
+            // No else needed - pipeline continues automatically via internal feedback
         }
     }
 
