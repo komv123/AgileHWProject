@@ -55,7 +55,7 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
         }
     }
     */
-    /*
+    
     "Pipeline" should "render 64 x 64 " in {
         simulate(new PipelineN(64, 64, 2)) { dut =>
             val writer = new PrintWriter("output64_64.ppm")
@@ -189,7 +189,7 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
 
             // PPM header
             writer.println("P3")
-            writer.println(s"320 320")
+            writer.println("640 480")
             writer.println("15")
 
             //dut.io.xmid.poke(-5755256176L.S)
@@ -212,8 +212,9 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
 
             // dut.clock.step(5)
             // dut.io.new_params.poke(0.B)
+            for (i <- 0 until 5){dut.clock.step(1000000)}
 
-            for(i <- 0 until 10){ 
+            for(i <- 0 until 300){ 
               dut.io.framePointer.poke(framePointer.U)
               //dut.io.bufferPointer.poke(bufferPointer.U)
 
@@ -225,8 +226,6 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
               //  dut.io.ReadData.request.valid.poke(true.B)
               //  dut.clock.step(1)
               //}
-
-              dut.clock.step(1000000)
 
               for (i <- 0 until 1024){
                   dut.io.ReadData.request.valid.poke(true.B)
@@ -248,5 +247,5 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
 
             writer.close()
         }
-    }
+    }*/
 }
