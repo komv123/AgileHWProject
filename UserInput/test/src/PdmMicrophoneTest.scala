@@ -9,7 +9,6 @@ import org.scalatest.matchers.must.Matchers
 class PdmMicrophoneTester extends AnyFlatSpec with Matchers with ChiselSim {
   behavior of "PdmMicrophone"
 
-  // Helper function for some of the stuff repeated
   def runTest(
       dut: PdmMicrophone,
       dataPattern: Int => Boolean,
@@ -23,22 +22,21 @@ class PdmMicrophoneTester extends AnyFlatSpec with Matchers with ChiselSim {
     val maxCycles = 20000
     var cycles = 0
 
-    dut.io.micLrSel.expect(false.B) // Should always be Left (Low)
+    dut.pins.micLrSel.expect(false.B)
 
     while (captureCount < 2 && cycles < maxCycles) {
-      val micClk = dut.io.micClk.peek()
+      val micClk = dut.pins.micClk.peek() // Updated IO path
       val risingEdge = !lastMicClk.litToBoolean && micClk.litToBoolean
-      dut.io.micData.poke(dataPattern(bitCount).B)
+
+      dut.pins.micData.poke(dataPattern(bitCount).B) // Updated IO path
 
       if (risingEdge) {
         bitCount += 1
       }
 
-      if (dut.io.valid.peek().litToBoolean) {
-        // Check outputs when valid is high
-        dut.io.waveform.expect(expectedWave.U)
-        // Amplitude is the absolute value of (waveform - 64)
-        dut.io.amplitude.expect(expectedAmp.U)
+      if (dut.signal.valid.peek().litToBoolean) {
+        dut.signal.waveform.expect(expectedWave.U) // Updated IO path
+        dut.signal.amplitude.expect(expectedAmp.U) // Updated IO path
         captureCount += 1
       }
 

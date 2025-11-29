@@ -6,16 +6,18 @@ import chisel3.util._
 class PdmMicrophone(
     val clockFreq: Int = 100000000,
     val micClockFreq: Int = 2500000
-) extends Module {
-  val io = IO(new Bundle {
+) extends Module
+    with SoundInput {
+
+  // Hardware specific pins
+  val pins = IO(new Bundle {
     val micData = Input(Bool())
     val micClk = Output(Bool())
     val micLrSel = Output(Bool())
-
-    val amplitude = Output(UInt(8.W))
-    val waveform = Output(UInt(8.W))
-    val valid = Output(Bool())
   })
+
+  // Output used for microphone wrapper
+  val signal = IO(new SoundInputSignalIO())
 
   val toggleCount = clockFreq / (2 * micClockFreq)
   val (clkCount, clkWrap) = Counter(true.B, toggleCount)
@@ -29,8 +31,8 @@ class PdmMicrophone(
 
   risingEdge := clkWrap && !micClkReg
 
-  io.micLrSel := false.B
-  io.micClk := micClkReg
+  pins.micLrSel := false.B
+  pins.micClk := micClkReg
 
   val (bitCount, bitWrap) = Counter(risingEdge, 128)
 
@@ -40,15 +42,16 @@ class PdmMicrophone(
   val waveformReg = RegInit(64.U(8.W))
   val validReg = RegInit(false.B)
 
-  io.amplitude := amplitudeReg
-  io.waveform := waveformReg
-  io.valid := validReg
+  // Drive the common interface
+  signal.amplitude := amplitudeReg
+  signal.waveform := waveformReg
+  signal.valid := validReg
 
   validReg := false.B
 
   when(risingEdge) {
     when(bitWrap) {
-      val totalSum = onesCounter + io.micData.asUInt
+      val totalSum = onesCounter + pins.micData.asUInt
       val centered = totalSum.zext - 64.S
 
       amplitudeReg := centered.abs.asUInt
@@ -57,7 +60,7 @@ class PdmMicrophone(
 
       onesCounter := 0.U
     }.otherwise {
-      onesCounter := onesCounter + io.micData.asUInt
+      onesCounter := onesCounter + pins.micData.asUInt
     }
   }
 }
