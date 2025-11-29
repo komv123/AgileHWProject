@@ -13,9 +13,7 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(implic
         val xmid    = Input(SInt(32.W))
         val ymid    = Input(SInt(32.W))
         val zoom        = Input(SInt(32.W))
-        //val maxiter     = Input(UInt(16.W))
         val new_params  = Input(Bool())
-        //val start_address = Input(UInt(24.W))
 
         val rgb_out     = Output(UInt(12.W))
         val valid_out   = Output(Bool())
