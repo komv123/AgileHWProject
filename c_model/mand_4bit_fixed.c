@@ -103,8 +103,8 @@ int main(int argc, char* argv[])
 
   const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 10 ? 10 : (unsigned short)atoi(argv[4]);
   
-  const int xres = 320;
-  const int yres = 240;
+  const int xres = 32;
+  const int yres = 32;
   const char* filename = argv[5];
 
   /* Precompute pixel width and height in fixed-point */

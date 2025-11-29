@@ -24,9 +24,9 @@ class Parameters() extends Module {
     switch(io.select){
         is(0.U){
             when(rising(io.enter)){
-                xmid := -50895.S
-                ymid := 8954.S
-                zoom := 1.S
+                xmid := -87819.S
+                ymid := 0.S
+                zoom := 262144.S
                 id := id + 1.U
             }
         }
