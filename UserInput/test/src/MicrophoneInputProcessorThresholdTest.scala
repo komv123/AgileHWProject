@@ -6,7 +6,6 @@ import chisel3.simulator.EphemeralSimulator._
 import chisel3.simulator.scalatest.ChiselSim
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
-import sound_input.{AmplitudeInputMapper, SoundInput, SoundInputSignalIO}
 
 class MockMicrophone extends Module with SoundInput {
   val signal = IO(new SoundInputSignalIO())
