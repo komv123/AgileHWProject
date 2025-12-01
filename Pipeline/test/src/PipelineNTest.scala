@@ -56,7 +56,6 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
         }
     }
     */
-    /*
     "Pipeline" should "render 64 x 64 " in {
         simulate(new PipelineN(64, 64, 2)) { dut =>
             val n = 2
@@ -152,7 +151,6 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
             writer.close()
         }
     }
-    */
     /*
     "Pipeline" should "render 128 x 128 " in {
         simulate(new PipelineN(128, 128, 4)) { dut =>
@@ -221,6 +219,7 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
         }
     }
     */
+    /*
     "Pipeline" should "render 256 x 256 " in {
         simulate(new PipelineN(256, 256, 16)) { dut =>
             val writer = new PrintWriter("output256_256.ppm")
@@ -290,6 +289,7 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
             writer.close()
         }
     }
+    */
     /*
     "Pipeline" should "render 320 x 320 " in {
         simulate(new PipelineN(320, 320, 10)) { dut =>
