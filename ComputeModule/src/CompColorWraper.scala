@@ -128,12 +128,19 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(implic
                 cntReg := cntReg + 1.U
 
                 when(cntReg === 1023.U) {
-                    cntReg := 0.U
-                    stateReg := State.RECIEVE_ACK
-                    transcactionStarted := 0.U
+                  cntReg := 0.U
+                  stateReg := State.RECIEVE_ACK
+                  transcactionStarted := 0.U
+
+                  val frameSize = (width * computeConfig_modified.height).U
+
+                  when(addroffsetreg + 1024.U >= frameSize) {
+                    addroffsetreg := 0.U
+                  }.otherwise {
                     addroffsetreg := addroffsetreg + 1024.U
-                }
+              }
             }
+          }
         }
         is(State.RECIEVE_ACK) {
             io.tilelink_out.d.ready := true.B
