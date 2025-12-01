@@ -40,4 +40,49 @@ class VisualizerSyncSpec extends AnyFlatSpec with Matchers with ChiselSim {
       dut.io.horizontalSyncPulse.peek().litToBoolean mustBe true
     }
   }
+
+  it should "hold sync signals and blanking across an entire frame" in {
+    val config = VisualizerConfig.default
+    val cyclesPerPixel = config.clockFrequency / config.vga.pixelFrequency
+
+    val hTiming = config.vga.horizontal
+    val vTiming = config.vga.vertical
+
+    val pixelsPerLine = hTiming.pixels + hTiming.frontPorch + hTiming.syncPulse + hTiming.backPorch
+    val totalLines = vTiming.pixels + vTiming.frontPorch + vTiming.syncPulse + vTiming.backPorch
+
+    simulate(new Visualizer(config)) { dut =>
+      def stepPixel(): Unit = dut.clock.step(cyclesPerPixel)
+
+      var line = 0
+      var column = 0
+
+      while (line < totalLines) {
+        val horizontalBlank = column >= hTiming.pixels
+        val verticalBlank = line >= vTiming.pixels
+
+        val inHorizontalSync =
+          column >= hTiming.pixels + hTiming.frontPorch && column < hTiming.pixels + hTiming.frontPorch + hTiming.syncPulse
+        val inVerticalSync =
+          line >= vTiming.pixels + vTiming.frontPorch && line < vTiming.pixels + vTiming.frontPorch + vTiming.syncPulse
+
+        dut.io.horizontalSyncPulse.peek().litToBoolean mustBe !inHorizontalSync
+        dut.io.verticalSyncPulse.peek().litToBoolean mustBe !inVerticalSync
+
+        if (horizontalBlank || verticalBlank) {
+          dut.io.colors.red.peek().litValue mustBe 0
+          dut.io.colors.green.peek().litValue mustBe 0
+          dut.io.colors.blue.peek().litValue mustBe 0
+        }
+
+        stepPixel()
+
+        column += 1
+        if (column == pixelsPerLine) {
+          column = 0
+          line += 1
+        }
+      }
+    }
+  }
 }
