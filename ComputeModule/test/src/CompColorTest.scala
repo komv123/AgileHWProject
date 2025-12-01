@@ -5,15 +5,26 @@ import org.scalatest.flatspec.AnyFlatSpec
 import java.io.PrintWriter
 import scala.util.control.Breaks._
 
-class CMColorSpec extends AnyFlatSpec with ChiselSim {
-    "FullTest" should "pass" in {
-        val n = 1
+import ComputeModule._
 
-        val width = 64
-        val height = 64
-        val frame_height = height / n
+class CMColorSpec extends AnyFlatSpec with ChiselSim {
+    val n = 2
+
+    val width = 128
+    val height = 128
+    val frame_height = height / n
+    val start_address = 0
+    val fills = (width * frame_height) / 1024
+
+    val computeConfig = ComputeConfig(
+        width = width,
+        height = frame_height,
+        maxiter = 1000
+    )
+    
+    "CMTest" should s"render $width x $height" in {
         
-        simulate(new CompColorWrapper(width, height, n)) { dut =>
+        simulate(new CompColorWrapper(computeConfig, n, start_address)) { dut =>
             println("Generating output.ppm")
             val writer = new PrintWriter("outputFull1.ppm")
 
@@ -29,36 +40,29 @@ class CMColorSpec extends AnyFlatSpec with ChiselSim {
             dut.io.zoom.poke(328.S)     // 21474836 >> 16
             dut.io.id.poke(1.U)
             
-            for (i <- 0 until 4){
-                dut.clock.step(1100000)
+            for (i <- 0 until fills){
+                dut.clock.step(1000000)
 
                 dut.io.tilelink_out.a.ready.poke(true.B)
-                
 
-
-
-            }
-
-            breakable 
-            {for (i <- 0 until 1000000) {
-                val valid = dut.io.valid_out.peek().litToBoolean
-                val yrow = dut.io.j_out.peek().litValue.toInt
-                if (y_prev > yrow) {break()}
-                if (!valid_prev && valid) {
-                    val k_out = dut.io.k_out.peek().litValue.toInt
-                    val rgb = dut.io.rgb_out.peek().litValue
-                    println(f"${yrow} k: ${k_out}, RGB: ${rgb}%03X")
-
+                for (i <- 0 until 1024){    
+                    val rgb = dut.io.tilelink_out.a.bits.data.peek().litValue
+                    //println(f"RGB: ${rgb}%03X")
                     val r = (rgb >> 8) & 0xF
                     val g = (rgb >> 4) & 0xF
                     val b = rgb & 0xF
-                    
+
                     writer.println(s"$r $g $b")
+                    dut.clock.step(1)
                 }
-                y_prev = dut.io.j_out.peek().litValue.toInt
-                valid_prev = dut.io.valid_out.peek().litToBoolean
+
+                dut.io.tilelink_out.a.ready.poke(false.B)
+                dut.io.tilelink_out.d.valid.poke(true.B)
+                dut.io.tilelink_out.d.ready.expect(true.B)
                 dut.clock.step(1)
-            }}
+                dut.io.tilelink_out.d.valid.poke(false.B)
+            }
+
             writer.close()
             println("PPM image written to outputFull1.ppm")
         }
