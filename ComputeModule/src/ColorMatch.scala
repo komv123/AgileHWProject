@@ -52,7 +52,7 @@ object ColorLUTGenerator {
 
     // Generate LUT entries
     for (i <- 0 until lutSize) {
-      val rgb = interpolateColor(i, maxK)
+      val rgb = interpolateColor(i, maxk)
       writer.println(f"$rgb%03x")
     }
 
@@ -77,7 +77,7 @@ class ColorMatch(maxiter: Int) extends Module {
 
     // Generate the LUT file at elaboration time with absolute path
     val lutFilePath = new java.io.File("color_lut.hex").getAbsolutePath
-    ColorLUTGenerator.generateLUT(maxK = maxiter, outputFile = lutFilePath)
+    ColorLUTGenerator.generateLUT(maxk = maxiter, outputFile = lutFilePath)
 
     // Initialize memory using SystemVerilog bind with absolute path
     loadMemoryFromFile(colorLUT, lutFilePath)
