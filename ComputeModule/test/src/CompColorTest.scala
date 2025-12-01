@@ -8,63 +8,66 @@ import scala.util.control.Breaks._
 import ComputeModule._
 
 class CMColorSpec extends AnyFlatSpec with ChiselSim {
-    val n = 2
+    val n = 15
 
-    val width = 128
-    val height = 128
+    val width = 640
+    val height = 480
     val frame_height = height / n
-    val start_address = 0
+    val start_address = width * frame_height * 3
     val fills = (width * frame_height) / 1024
 
     val computeConfig = ComputeConfig(
         width = width,
-        height = frame_height,
+        height = height,
         maxiter = 1000
     )
     
     "CMTest" should s"render $width x $height" in {
         
-        simulate(new CompColorWrapper(computeConfig, n, start_address)) { dut =>
-            println("Generating output.ppm")
-            val writer = new PrintWriter("outputFull1.ppm")
+        println("Generating output.ppm")
+        val writer = new PrintWriter("outputFull1.ppm")
+        // PPM header
+        writer.println("P3")
+        writer.println(s"$width $height")
+        writer.println("15")
 
-            // PPM header
-            writer.println("P3")
-            writer.println(s"$width $frame_height")
-            writer.println("15")
+        for (cu <- 0 until n){
+            simulate(new CompColorWrapper(computeConfig, n, width * frame_height * cu)) { dut =>
 
-            println("Start partial frame test")
+                println("Start partial frame test")
 
-            dut.io.xmid.poke(-48729.S)  // -3193384776 >> 16
-            dut.io.ymid.poke(8329.S)    // 545867056 >> 16
-            dut.io.zoom.poke(328.S)     // 21474836 >> 16
-            dut.io.id.poke(1.U)
-            
-            for (i <- 0 until fills){
-                dut.clock.step(1000000)
+                // dut.io.xmid.poke(-48729.S)  // -3193384776 >> 16
+                // dut.io.ymid.poke(8329.S)    // 545867056 >> 16
+                // dut.io.zoom.poke(650.S)     // 21474836 >> 16
+                // dut.io.id.poke(1.U)
 
-                dut.io.tilelink_out.a.ready.poke(true.B)
+                dut.io.id.poke(1.U)
+                
+                for (i <- 0 until fills){
+                    dut.clock.step(3000000)
+                    
+                    dut.io.tilelink_out.a.ready.poke(true.B)
 
-                for (i <- 0 until 1024){    
-                    val rgb = dut.io.tilelink_out.a.bits.data.peek().litValue
-                    //println(f"RGB: ${rgb}%03X")
-                    val r = (rgb >> 8) & 0xF
-                    val g = (rgb >> 4) & 0xF
-                    val b = rgb & 0xF
+                    for (i <- 0 until 1024){    
+                        val rgb = dut.io.tilelink_out.a.bits.data.peek().litValue
+                        //println(f"RGB: ${rgb}%03X")
+                        val r = (rgb >> 8) & 0xF
+                        val g = (rgb >> 4) & 0xF
+                        val b = rgb & 0xF
 
-                    writer.println(s"$r $g $b")
+                        writer.println(s"$r $g $b")
+                        dut.clock.step(1)
+                    }
+
+                    dut.io.tilelink_out.a.ready.poke(false.B)
+                    dut.io.tilelink_out.d.valid.poke(true.B)
+                    dut.io.tilelink_out.d.ready.expect(true.B)
                     dut.clock.step(1)
+                    dut.io.tilelink_out.d.valid.poke(false.B)
                 }
-
-                dut.io.tilelink_out.a.ready.poke(false.B)
-                dut.io.tilelink_out.d.valid.poke(true.B)
-                dut.io.tilelink_out.d.ready.expect(true.B)
-                dut.clock.step(1)
-                dut.io.tilelink_out.d.valid.poke(false.B)
             }
-
-            writer.close()
-            println("PPM image written to outputFull1.ppm")
         }
+        writer.close()
+        println("PPM image written to outputFull1.ppm")
     }
 }
