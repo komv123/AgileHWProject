@@ -3,7 +3,7 @@
 # Tools
 MILL        ?= mill
 MILL_FLAGS  ?= --no-server
-SYNTH_TOOL  ?= openxc7
+SYNTH_TOOL  ?= f4pga
 
 # Directories
 RTLDIR      = $(CURDIR)/rtl
