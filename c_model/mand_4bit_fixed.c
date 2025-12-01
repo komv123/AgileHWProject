@@ -96,15 +96,15 @@ int main(int argc, char* argv[])
 
   const int64_t xmin = xmid - (zoom / 2);
   const int64_t xmax = xmid + (zoom / 2);
-  const int64_t ymin = ymid - ((zoom / 2) * 0.75);
-  const int64_t ymax = ymid + ((zoom / 2) * 0.75);
+  const int64_t ymin = ymid - ((zoom / 2));
+  const int64_t ymax = ymid + ((zoom / 2));
 
   printf("xmin, xmax, ymin, ymax: %ld %ld %ld %ld\n", xmin, xmax, ymin, ymax);
 
   const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 10 ? 10 : (unsigned short)atoi(argv[4]);
   
-  const int xres = 320;
-  const int yres = 240;
+  const int xres = 128;
+  const int yres = 128;
   const char* filename = argv[5];
 
   /* Precompute pixel width and height in fixed-point */
