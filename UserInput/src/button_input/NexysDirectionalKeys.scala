@@ -4,9 +4,9 @@ import chisel3._
 import chisel3.util._
 
 class NexysDirectionalKeys(
-    startCenterX: Int = 0,
+    startCenterX: Int = -49152,
     startCenterY: Int = 0,
-    startZoom: Int = 21474836,
+    startZoom: Int = 196608,
     moveMultiplier: Int = 10,
     zoomMultiplier: Int = 1000,
     val tickDelay: Int = 1600000
