@@ -8,7 +8,7 @@ import scala.annotation.switch
 import java.io.PrintWriter
 
 object ColorLUTGenerator {
-  def generateLUT(lutSize: Int = 1024, outputFile: String = "color_lut.hex"): Unit = {
+  def generateLUT(lutSize: Int = 1024, maxk: Int = 1000, outputFile: String = "color_lut.hex"): Unit = {
     // Define color gradient stops (similar to original, but simplified)
     // Format: (position, red, green, blue) - each color component is 0-15 (4 bits)
     val colorStops: Seq[(Double, Int, Int, Int)] = Seq(
@@ -52,7 +52,7 @@ object ColorLUTGenerator {
 
     // Generate LUT entries
     for (i <- 0 until lutSize) {
-      val rgb = interpolateColor(i, lutSize - 1)
+      val rgb = interpolateColor(i, maxK)
       writer.println(f"$rgb%03x")
     }
 
@@ -77,7 +77,7 @@ class ColorMatch(maxiter: Int) extends Module {
 
     // Generate the LUT file at elaboration time with absolute path
     val lutFilePath = new java.io.File("color_lut.hex").getAbsolutePath
-    ColorLUTGenerator.generateLUT(outputFile = lutFilePath)
+    ColorLUTGenerator.generateLUT(maxK = maxiter, outputFile = lutFilePath)
 
     // Initialize memory using SystemVerilog bind with absolute path
     loadMemoryFromFile(colorLUT, lutFilePath)
