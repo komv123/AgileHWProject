@@ -42,7 +42,7 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   )
 
   val videoBuffer = Module(new VideoBuffer(config))
-  val cu = Seq.tabulate(n)(i => Module(new CompColorWrapper(computeConfig, n, start_address = width * (height / n) * i)(c)))
+  val cu = Seq.tabulate(n)(i => Module(new CompColorWrapper(computeConfig, n, start_address = width * ((height / n) * i))(c)))
   val params = Module(new Parameters())
 
 

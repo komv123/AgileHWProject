@@ -271,7 +271,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val escape = 262144.S  // 4.0 in Q16.16 fixed-point (was 4.0 in Q32.32)
     val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point (was 2.0 in Q32.32)
     val three_eighths = 24576.S  // 3/8 = 0.375 in Q16.16 fixed-point
-
+    
     val widthU = width.U
     val heightU = (height / n).U
     val nU = n.U
@@ -279,12 +279,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val heightS = height.S
     val nS = n.S
 
-    //val addr_max1 = width.U * (height.U * n.U)
-    //val addr_max1 = (width * (height * n))
-    //val addr_max1 = width * height
-    //val addr_maxCU = addr_max1 / n.U
-    //val addr_maxCU = (addr_max1 / n)
     val addr_maxCU = (width * height)
+    val position = (start_address / addr_maxCU).U
     
     /* Register declarations */
     val xmid    = RegInit(0.S(32.W)) //(-3335440880L.S(32.W))
@@ -362,12 +358,9 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val xmax_next = xmid + (zoom >> 1)
             // Use fixed_mul to compute 3/8 * zoom without overflow
             val y_offset = fixed_mul(zoom, three_eighths)
-            val ymin_next = ymid - y_offset
-            val ymax_next = ymid + y_offset
+            val ymin_next = ymid - (zoom >> 1)//y_offset
+            val ymax_next = ymid + (zoom >> 1)//y_offset
             
-            //val position = start_address.U / addr_maxCU
-            val position = (start_address / addr_maxCU).U
-
             //NOTE REALLY BAD
             val y_window = (ymax_next - ymin_next) / n.S
 
