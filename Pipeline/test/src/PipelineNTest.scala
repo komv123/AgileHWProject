@@ -133,7 +133,7 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
             writer.close()
         }
     }
-    */
+    
     /*
     "Pipeline" should "render 128 x 128 " in {
         simulate(new PipelineN(128, 128, 4)) { dut =>
@@ -232,7 +232,9 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
             // dut.clock.step(5)
             // dut.io.new_params.poke(0.B)
             for (i <- 0 until 5){dut.clock.step(1000000)}
+            for (i <- 0 until 5){dut.clock.step(1000000)}
 
+            for(i <- 0 until 300){ 
             for(i <- 0 until 300){ 
               dut.io.framePointer.poke(framePointer.U)
               //dut.io.bufferPointer.poke(bufferPointer.U)
