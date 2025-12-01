@@ -173,10 +173,35 @@ object RRArbiter {
   }
 }
 
+class ValidRotatingLockingRRArbiter[T <: Data](
+  gen: T,
+  n: Int,
+  count: Int,
+  needsLock: Option[T => Bool] = None,
+  initLastGrant: Boolean = false
+) extends LockingRRArbiter[T](gen, n, count, needsLock, initLastGrant) {
+  
+  // Override to update on valid instead of fire
+  override lazy val lastGrant = {
+    val reg = if (initLastGrant) {
+      RegInit(0.U(log2Ceil(n).W))
+    } else {
+      Reg(UInt(log2Ceil(n).W))
+    }
+    
+    // Update whenever any input is valid (not just on fire)
+    when(io.in.map(_.valid).reduce(_ || _)) {
+      reg := io.chosen
+    }
+    
+    reg
+  }
+}
+
 
 object RRLockArbiter {
   def apply[T <: Data](requests: Seq[DecoupledIO[T]]): DecoupledIO[T] = {
-    val arb = Module(new LockingRRArbiter(chiselTypeOf(requests.head.bits), requests.size, count = 1024,
+    val arb = Module(new ValidRotatingLockingRRArbiter(chiselTypeOf(requests.head.bits), requests.size, count = 1024,
     needsLock = Some((data: T) => {
       // Lock when size = 1023 (indicating a 1024-beat burst)
       data.asInstanceOf[Tilelink_A].size === 1023.U
@@ -186,6 +211,55 @@ object RRLockArbiter {
     arb.io.out
   }
 }
+
+/*
+object ValidRotatingRRArbiter {
+  def apply[T <: Data](requests: Seq[DecoupledIO[T]]): DecoupledIO[T] = {
+    val n = requests.size
+    val arb = Module(new Module {
+      val io = IO(new Bundle {
+        val in = Flipped(Vec(n, Decoupled(chiselTypeOf(requests.head.bits))))
+        val out = Decoupled(chiselTypeOf(requests.head.bits))
+        val chosen = Output(UInt(log2Ceil(n).W))
+      })
+      
+      // Update pointer on ANY valid request (not just fire)
+      val lastGrant = RegInit(0.U(log2Ceil(n).W))
+      when(io.in.map(_.valid).reduce(_ || _)) {
+        lastGrant := io.chosen
+      }
+      
+      val grantMask = VecInit((0 until n).map(_.U > lastGrant))
+      val validMask = io.in.zip(grantMask).map { case (in, g) => in.valid && g }
+      
+      // Standard ArbiterCtrl logic
+      def arbiterCtrl(request: Seq[Bool]): Seq[Bool] = request.length match {
+        case 0 => Seq()
+        case 1 => Seq(true.B)
+        case _ => true.B +: request.tail.init.scanLeft(request.head)(_ || _).map(!_)
+      }
+      
+      val ctrl = arbiterCtrl((0 until n).map(i => validMask(i)) ++ io.in.map(_.valid))
+      val grant = (0 until n).map(i => ctrl(i) && grantMask(i) || ctrl(i + n))
+      
+      io.chosen := (n - 1).U
+      for (i <- n - 2 to 0 by -1)
+        when(io.in(i).valid) { io.chosen := i.U }
+      for (i <- n - 1 to 1 by -1)
+        when(validMask(i)) { io.chosen := i.U }
+      
+      io.out.valid := io.in(io.chosen).valid
+      io.out.bits := io.in(io.chosen).bits
+      
+      for ((in, g) <- io.in.zip(grant))
+        in.ready := g && io.out.ready
+    })
+    
+    arb.io.in.zip(requests).foreach { case (in, req) => in <> req }
+    arb.io.out
+  }
+}
+*/
 
 /*
 object RRLockArbiter {
@@ -249,3 +323,4 @@ object Arbiter {
     arb.io.out
   }
 }
+
