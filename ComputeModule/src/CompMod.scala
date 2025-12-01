@@ -388,7 +388,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val y_offset = (zoom >> 1)
             val ymin_next = ymid - y_offset
             val ymax_next = ymid + y_offset
-            
+
             //val position = start_address.U / addr_maxCU
             val position = start_address / addr_maxCU  // Scala Int, computed at elaboration time
 
@@ -418,18 +418,21 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
 
             //j := 0.S
             j := 0.U
+            y := ymax_cu_next  // Initialize y to starting position
 
             stateReg := YLOOP
         }
         
         is (YLOOP) {
-            y := ymax - (j.asSInt * dy)
+            // Decrement y instead of multiplying: y = ymax - j*dy becomes y -= dy
+            y := y - dy
             //i := 0.S
             i := 0.U
             //j := j + 1.S
             j := j + 1.U
+            x := xmin  // Initialize x to starting position for this row
 
-            when (j < height.U){stateReg := XLOOP} 
+            when (j < height.U){stateReg := XLOOP}
             .otherwise {
                 //j := 0.S
                 j := 0.U
@@ -438,7 +441,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         }
 
         is (XLOOP) {
-            x := xmin + (i.asSInt * dx)
+            // Increment x instead of multiplying: x = xmin + i*dx becomes x += dx
+            x := x + dx
 
             val valid_next = 0.B
             //val i_next = i + 1.S
