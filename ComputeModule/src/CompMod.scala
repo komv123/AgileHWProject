@@ -307,18 +307,6 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point (was 2.0 in Q32.32)
     val three_eighths = 24576.S  // 3/8 = 0.375 in Q16.16 fixed-point
 
-    val widthU = width.U
-    val heightU = (height / n).U
-    val nU = n.U
-    val widthS = width.S
-    val heightS = height.S
-    val nS = n.S
-
-    //val addr_max1 = width.U * (height.U * n.U)
-    //val addr_max1 = (width * (height * n))
-    //val addr_max1 = width * height
-    //val addr_maxCU = addr_max1 / n.U
-    //val addr_maxCU = (addr_max1 / n)
     val addr_maxCU = (width * height)
     
     /* Register declarations */
@@ -408,16 +396,19 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val y_window = (ymax_next - ymin_next) / n.S
 
             //val ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
-            val ymin_cu_next = ymax_next - (y_window * (position + 1.U))
-            val ymax_cu_next = ymax_next - (y_window * position)
+            val ymax_cu_next = ymin_next + (y_window * (n.U - position))
+            val ymin_cu_next = ymin_next + (y_window * (n.U - position - 1.U))
 
             xmin := xmin_next
             xmax := xmax_next
             ymin := ymin_cu_next
             ymax := ymax_cu_next
 
-            dx := (xmax_next - xmin_next) / width.S
-            dy := (ymax_cu_next - ymin_cu_next) / height.S
+            val dx_next = (xmax_next - xmin_next) / width.S
+            val dy_next = (ymax_cu_next - ymin_cu_next) / height.S
+
+            dx := dx_next
+            dy := dy_next
             //dy := (ymax - ymin) / height.S
 
             //j := 0.S
@@ -427,7 +418,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         }
         
         is (YLOOP) {
-            y := ymax - j * dy
+            y := ymax - (j.asSInt * dy)
             //i := 0.S
             i := 0.U
             //j := j + 1.S
@@ -442,7 +433,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         }
 
         is (XLOOP) {
-            x := xmin + i * dx
+            x := xmin + (i.asSInt * dx)
 
             val valid_next = 0.B
             //val i_next = i + 1.S
