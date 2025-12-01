@@ -307,18 +307,6 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point (was 2.0 in Q32.32)
     val three_eighths = 24576.S  // 3/8 = 0.375 in Q16.16 fixed-point
 
-    val widthU = width.U
-    val heightU = (height / n).U
-    val nU = n.U
-    val widthS = width.S
-    val heightS = height.S
-    val nS = n.S
-
-    //val addr_max1 = width.U * (height.U * n.U)
-    //val addr_max1 = (width * (height * n))
-    //val addr_max1 = width * height
-    //val addr_maxCU = addr_max1 / n.U
-    //val addr_maxCU = (addr_max1 / n)
     val addr_maxCU = (width * height)
     
     /* Register declarations */
@@ -402,22 +390,30 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val ymax_next = ymid + y_offset
             
             //val position = start_address.U / addr_maxCU
-            val position = (start_address / addr_maxCU).U
+            val position = start_address / addr_maxCU  // Scala Int, computed at elaboration time
 
-            //NOTE REALLY BAD
-            val y_window = (ymax_next - ymin_next) / n.S
+            // Compute coordinate ranges for this CU
+            // Divide the total y-range among n CUs
+            // To avoid gaps from rounding errors, we compute dy first, then derive ymin/ymax from it
 
-            //val ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
-            val ymin_cu_next = ymax_next - (y_window * (position + 1.U))
-            val ymax_cu_next = ymax_next - (y_window * position)
+            val total_y_range = ymax_next - ymin_next
+            val total_height = (n * height).S
+            val dy_next = total_y_range / total_height
+
+            // Each CU gets height rows, starting from position*height rows from the top
+            val row_offset = (position * height).S
+            val ymax_cu_next = ymax_next - (dy_next * row_offset)
+            val ymin_cu_next = ymax_cu_next - (dy_next * height.S)
 
             xmin := xmin_next
             xmax := xmax_next
             ymin := ymin_cu_next
             ymax := ymax_cu_next
 
-            dx := (xmax_next - xmin_next) / width.S
-            dy := (ymax_cu_next - ymin_cu_next) / height.S
+            val dx_next = (xmax_next - xmin_next) / width.S
+
+            dx := dx_next
+            dy := dy_next
             //dy := (ymax - ymin) / height.S
 
             //j := 0.S
@@ -427,7 +423,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         }
         
         is (YLOOP) {
-            y := ymax - j * dy
+            y := ymax - (j.asSInt * dy)
             //i := 0.S
             i := 0.U
             //j := j + 1.S
@@ -442,7 +438,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         }
 
         is (XLOOP) {
-            x := xmin + i * dx
+            x := xmin + (i.asSInt * dx)
 
             val valid_next = 0.B
             //val i_next = i + 1.S

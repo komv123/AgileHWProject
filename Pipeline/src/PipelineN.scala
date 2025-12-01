@@ -32,6 +32,10 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
 
     //val maxiter     = Input(UInt(16.W))
     // val new_params  = Input(Bool())
+
+    // PPM debug outputs
+    val ppm_rgb = Output(Vec(n, UInt(12.W)))
+    val ppm_valid = Output(Vec(n, Bool()))
   })
 
   // Create compute config inline
@@ -82,4 +86,10 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   //  //cu(i).io.start_address := (1024 * i).U
   //  cu(i).io.start_address := (width * (height / n) * i).U
   //}
+
+  // Use tapAndRead to expose color module outputs
+  for (i <- 0 until n) {
+    io.ppm_rgb(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.rgb_out)
+    io.ppm_valid(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.valid_out)
+  }
 }
