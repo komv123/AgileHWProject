@@ -7,8 +7,18 @@ import scala.annotation.switch
 
 // Object containing all pipeline-related definitions
 object MandelbrotPipeline {
-  
+
   // Bundle definitions for each pipeline stage
+  class Stage0Bundle extends Bundle {
+    val u = SInt(32.W)
+    val v = SInt(32.W)
+    val u2 = SInt(32.W)
+    val v2 = SInt(32.W)
+    val k = UInt(10.W)
+    val x = SInt(32.W)
+    val y = SInt(32.W)
+  }
+
   class Stage1Bundle extends Bundle {
     val u = SInt(32.W)
     val v = SInt(32.W)
@@ -77,13 +87,19 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
   import MandelbrotPipeline._
 
   val io = IO(new Bundle {
-    val in = Flipped(Valid(new Stage1Bundle))
+    val in = Flipped(Valid(new Stage0Bundle))
     val out = Valid(new OutputBundle)
     val clear_pipeline = Input(Bool())  // Signal from FSM to clear pipeline
   })
 
   // Instantiate single hardware multiplier
   val hwMul = Module(new FixedMul())
+
+  val hwMulRegA = RegInit(0.S(32.W))
+  val hwMulRegB = RegInit(0.S(32.W))
+
+  hwMul.io.a := hwMulRegA
+  hwMul.io.b := hwMulRegB 
 
   // Fixed-point multiplication helper
   def fixed_mul(a: SInt, b: SInt): SInt = {
@@ -96,6 +112,9 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
   val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point
 
   // Pipeline registers with valid bits
+  val stage0_valid = RegInit(false.B)
+  val stage0_data = Reg(new Stage1Bundle)
+
   val stage1_valid = RegInit(false.B)
   val stage1_data = Reg(new Stage2Bundle)
 
@@ -112,13 +131,29 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
   //val clear = RegInit(VecInit(Seq.fill(2)(false.B)))
   val clearReg = RegInit(false.B)
 
-  // Default values for hardware multiplier (will be overridden by stages)
-  hwMul.io.a := 0.S
-  hwMul.io.b := 0.S
+  clearReg := false.B //Default statement
 
-  // Create input mux: select between external io.in and stage3 feedback
+  // Stage 0: Setup hardware multiplier input registers for v*u (initial input only)
+  stage0_valid := io.in.valid && !clearReg
+  when(io.in.valid && !clearReg) {
+    // Set up inputs to hardware multiplier registers for initial v*u
+    hwMulRegA := io.in.bits.v
+    hwMulRegB := io.in.bits.u
+
+    val stage0_result = Wire(new Stage1Bundle)
+    stage0_result.u := io.in.bits.u
+    stage0_result.v := io.in.bits.v
+    stage0_result.u2 := io.in.bits.u2
+    stage0_result.v2 := io.in.bits.v2
+    stage0_result.k := io.in.bits.k
+    stage0_result.x := io.in.bits.x
+    stage0_result.y := io.in.bits.y
+
+    stage0_data := stage0_result
+  }
+
+  // Create input mux for Stage1: select between Stage0 and Stage3 feedback
   val stage1_input = Wire(new Stage1Bundle)
-
   val use_feedback = stage3_valid
 
   stage1_input := Mux(use_feedback,
@@ -134,23 +169,21 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
       fb.y := io.in.bits.y
       fb
     },
-    // External input
-    io.in.bits
+    // From Stage0
+    stage0_data
   )
 
-  clearReg := false.B //Default statemtn
-
-  // Stage 1: Compute v*u using hardware multiplier
-  
-  stage1_valid := (io.in.valid || stage3_valid) && !clearReg
-  when((io.in.valid || stage3_valid) && !clearReg) {
-    // Mux inputs to hardware multiplier for stage 1
-    hwMul.io.a := stage1_input.v
-    hwMul.io.b := stage1_input.u
+  // Stage 1: Read v*u result, compute u_next, setup u_next^2 multiplication
+  stage1_valid := (stage0_valid || stage3_valid) && !clearReg
+  when((stage0_valid || stage3_valid) && !clearReg) {
+    // Set up next multiplication (u_next^2)
+    val u_next = stage1_input.u2 - stage1_input.v2 + stage1_input.x
+    hwMulRegA := u_next
+    hwMulRegB := u_next
 
     val stage1_result = Wire(new Stage2Bundle)
-    stage1_result.u_next := stage1_input.u2 - stage1_input.v2 + stage1_input.x
-    stage1_result.v_next_partial := hwMul.io.result
+    stage1_result.u_next := u_next
+    stage1_result.v_next_partial := hwMul.io.result  // v*u result from Stage0 or Stage3
     stage1_result.u2 := stage1_input.u2
     stage1_result.v2 := stage1_input.v2
     stage1_result.k := stage1_input.k
@@ -159,34 +192,35 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
     stage1_data := stage1_result
   }
 
-  // Stage 2: Compute u_next^2 using hardware multiplier
+  // Stage 2: Read u_next^2 result, compute v_next, setup v_next^2 multiplication
   stage2_valid := stage1_valid && !clearReg
   when(stage1_valid && !clearReg) {
-    // Mux inputs to hardware multiplier for stage 2
-    hwMul.io.a := stage1_data.u_next
-    hwMul.io.b := stage1_data.u_next
+    // Compute v_next and set up next multiplication (v_next^2)
+    val v_next = (stage1_data.v_next_partial << 1) + stage1_data.y
+    hwMulRegA := v_next
+    hwMulRegB := v_next
 
     val stage2_result = Wire(new Stage3Bundle)
-    stage2_result.v_next := (stage1_data.v_next_partial << 1) + stage1_data.y  // multiply by 2 using shift
+    stage2_result.v_next := v_next
     stage2_result.u_next := stage1_data.u_next
-    stage2_result.u2_next := hwMul.io.result
+    stage2_result.u2_next := hwMul.io.result  // u_next^2 result from Stage1
     stage2_result.v2_next := 0.S  // Will be computed in stage 3
     stage2_result.k_next := stage1_data.k
 
     stage2_data := stage2_result
   }
 
-  // Stage 3: Compute v_next^2 using hardware multiplier
+  // Stage 3: Read v_next^2 result, complete iteration values, setup next v*u for feedback
   // Output feeds back to stage1 via the mux
   stage3_valid := stage2_valid && !clearReg
   when(stage2_valid && !clearReg) {
-    // Mux inputs to hardware multiplier for stage 3
-    hwMul.io.a := stage2_data.v_next
-    hwMul.io.b := stage2_data.v_next
+    // Set up next multiplication for feedback (v_next * u_next)
+    hwMulRegA := stage2_data.v_next
+    hwMulRegB := stage2_data.u_next
 
     val stage3_result = Wire(new Stage3Bundle)
     stage3_result.u2_next := stage2_data.u2_next
-    stage3_result.v2_next := hwMul.io.result
+    stage3_result.v2_next := hwMul.io.result  // v_next^2 result from Stage2
     stage3_result.u_next := stage2_data.u_next
     stage3_result.v_next := stage2_data.v_next
     stage3_result.k_next := stage2_data.k_next + 1.U
@@ -273,18 +307,6 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point (was 2.0 in Q32.32)
     val three_eighths = 24576.S  // 3/8 = 0.375 in Q16.16 fixed-point
 
-    val widthU = width.U
-    val heightU = (height / n).U
-    val nU = n.U
-    val widthS = width.S
-    val heightS = height.S
-    val nS = n.S
-
-    //val addr_max1 = width.U * (height.U * n.U)
-    //val addr_max1 = (width * (height * n))
-    //val addr_max1 = width * height
-    //val addr_maxCU = addr_max1 / n.U
-    //val addr_maxCU = (addr_max1 / n)
     val addr_maxCU = (width * height)
     
     /* Register declarations */
@@ -319,7 +341,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     val pipeline = Module(new IterationPipeline(config, n, start_address))
 
     // Pipeline input bundle with feedback loop
-    val pipelineInput = Wire(new Stage1Bundle)
+    val pipelineInput = Wire(new Stage0Bundle)
 
     // Default values (will be overridden based on state)
     pipelineInput.u := 0.S
@@ -366,40 +388,51 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             val y_offset = (zoom >> 1)
             val ymin_next = ymid - y_offset
             val ymax_next = ymid + y_offset
-            
+
             //val position = start_address.U / addr_maxCU
-            val position = (start_address / addr_maxCU).U
+            val position = start_address / addr_maxCU  // Scala Int, computed at elaboration time
 
-            //NOTE REALLY BAD
-            val y_window = (ymax_next - ymin_next) / n.S
+            // Compute coordinate ranges for this CU
+            // Divide the total y-range among n CUs
+            // To avoid gaps from rounding errors, we compute dy first, then derive ymin/ymax from it
 
-            //val ymin_cu_next = ymax_next - (y_window * (position + 1.U)) - 1.S
-            val ymin_cu_next = ymax_next - (y_window * (position + 1.U))
-            val ymax_cu_next = ymax_next - (y_window * position)
+            val total_y_range = ymax_next - ymin_next
+            val total_height = (n * height).S
+            val dy_next = total_y_range / total_height
+
+            // Each CU gets height rows, starting from position*height rows from the top
+            val row_offset = (position * height).S
+            val ymax_cu_next = ymax_next - (dy_next * row_offset)
+            val ymin_cu_next = ymax_cu_next - (dy_next * height.S)
 
             xmin := xmin_next
             xmax := xmax_next
             ymin := ymin_cu_next
             ymax := ymax_cu_next
 
-            dx := (xmax_next - xmin_next) / width.S
-            dy := (ymax_cu_next - ymin_cu_next) / height.S
+            val dx_next = (xmax_next - xmin_next) / width.S
+
+            dx := dx_next
+            dy := dy_next
             //dy := (ymax - ymin) / height.S
 
             //j := 0.S
             j := 0.U
+            y := ymax_cu_next  // Initialize y to starting position
 
             stateReg := YLOOP
         }
         
         is (YLOOP) {
-            y := ymax - j * dy
+            // Decrement y instead of multiplying: y = ymax - j*dy becomes y -= dy
+            y := y - dy
             //i := 0.S
             i := 0.U
             //j := j + 1.S
             j := j + 1.U
+            x := xmin  // Initialize x to starting position for this row
 
-            when (j < height.U){stateReg := XLOOP} 
+            when (j < height.U){stateReg := XLOOP}
             .otherwise {
                 //j := 0.S
                 j := 0.U
@@ -408,7 +441,8 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
         }
 
         is (XLOOP) {
-            x := xmin + i * dx
+            // Increment x instead of multiplying: x = xmin + i*dx becomes x += dx
+            x := x + dx
 
             val valid_next = 0.B
             //val i_next = i + 1.S
