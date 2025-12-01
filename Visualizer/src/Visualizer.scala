@@ -40,7 +40,7 @@ class Visualizer(config: VisualizerConfig) extends Module {
     config.vga.horizontal.pixels * config.vga.vertical.pixels
   )
 
-  pipeline.io.select := io.btnr
+  pipeline.io.select := io.btnl
   pipeline.io.enter := io.btnr
   pipeline.io.framePointer := pixelCount
   pipeline.io.ReadData.request.valid := vgaController.io.requestPixel
