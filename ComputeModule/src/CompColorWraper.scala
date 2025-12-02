@@ -134,7 +134,7 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(
           stateReg := State.RECIEVE_ACK
           transcactionStarted := 0.U
 
-          val frameSize = (width * height).U
+          val frameSize = (width * computeConfig_modified.height).U
 
           when(addroffsetreg + 1024.U >= frameSize) {
             addroffsetreg := 0.U

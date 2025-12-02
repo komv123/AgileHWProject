@@ -7,6 +7,7 @@ import circt.stage.ChiselStage
 
 import vga._
 import Pipeline._
+import UserInput._
 
 case class VisualizerConfig(
     val vga: VGAConfig,
@@ -24,15 +25,18 @@ class Visualizer(config: VisualizerConfig) extends Module {
   val io = IO(new Bundle {
     val colors = Output(new RGB(config.vga.colorDepth))
     val horizontalSyncPulse, verticalSyncPulse = Output(Bool())
-    val btnr = Input(Bool())
+    val btnu = Input(Bool())
+    val btnd = Input(Bool())
     val btnl = Input(Bool())
+    val btnr = Input(Bool())
+    val btnc = Input(Bool())
   })
 
   val vgaController = Module(
     new VGAController(config.vga, config.clockFrequency)
   )
   val pipeline = Module(
-    new Pipeline(config.vga.horizontal.pixels, config.vga.vertical.pixels)
+    new PipelineN(config.vga.horizontal.pixels, config.vga.vertical.pixels, 15)
   )
 
   val (pixelCount, _) = Counter(
@@ -40,8 +44,18 @@ class Visualizer(config: VisualizerConfig) extends Module {
     config.vga.horizontal.pixels * config.vga.vertical.pixels
   )
 
-  pipeline.io.select := io.btnl
-  pipeline.io.enter := io.btnr
+  val userInputs = Module(
+    new NexysDirectionalKeys(
+    )
+  )
+
+  userInputs.io.upButton := io.btnu
+  userInputs.io.downButton := io.btnd
+  userInputs.io.leftButton := io.btnl
+  userInputs.io.rightButton := io.btnr
+  userInputs.io.midButton := io.btnc
+  pipeline.io.userInput <> userInputs.io.userInput
+
   pipeline.io.framePointer := pixelCount
   pipeline.io.ReadData.request.valid := vgaController.io.requestPixel
   pipeline.io.ReadData.request.bits.addr := 0.U

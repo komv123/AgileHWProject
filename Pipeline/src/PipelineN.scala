@@ -7,6 +7,7 @@ import Common._
 import VideoBuffer._
 import MMU._
 import ComputeModule._
+import UserInput._
 
 //class VideoBuffer(implicit c: Configuration) extends Module{
 class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration = defaultConfig) extends Module{
@@ -20,22 +21,7 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
     //val bufferPointer = Input(UInt(log2Ceil(c.bufferSize).W))
     val framePointer = Input(UInt(24.W))
 
-    //val xmid    = Input(SInt(64.W))
-    //val ymid    = Input(SInt(64.W))
-    //val zoom        = Input(SInt(64.W))
-    // val xmid    = Input(SInt(32.W))
-    // val ymid    = Input(SInt(32.W))
-    // val zoom        = Input(SInt(32.W))
-
-    val select = Input(UInt(4.W))
-    val enter = Input(Bool())
-
-    //val maxiter     = Input(UInt(16.W))
-    // val new_params  = Input(Bool())
-
-    // PPM debug outputs
-    val ppm_rgb = Output(Vec(n, UInt(12.W)))
-    val ppm_valid = Output(Vec(n, Bool()))
+    val userInput = Flipped(Valid(new UserInputPosition(32)))
   })
 
   // Create compute config inline
@@ -47,7 +33,14 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
 
   val videoBuffer = Module(new VideoBuffer(config))
   val cu = Seq.tabulate(n)(i => Module(new CompColorWrapper(computeConfig, n, start_address = width * (height / n) * i)(c)))
-  val params = Module(new Parameters())
+  val idReg = RegInit(0.U(4.W))
+  val xReg = RegNext(io.userInput.bits.xmid)
+  val yReg = RegNext(io.userInput.bits.ymid)
+  val zReg = RegNext(io.userInput.bits.zoom)
+
+  when(io.userInput.valid && (io.userInput.bits.xmid =/= xReg || io.userInput.bits.ymid =/= yReg || io.userInput.bits.zoom =/= zReg)) {
+    idReg := idReg + 1.U
+  }
 
 
   val xbarConfig = TLXbarConfig(
@@ -71,15 +64,11 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   videoBuffer.io.tilelink <> mmu.io.tilelink_out
   io.ReadData <> videoBuffer.io.ReadData
 
-  params.io.select := io.select
-  params.io.enter := io.enter
-
   cu.foreach { module =>
-    module.io.xmid := params.io.xmid
-    module.io.ymid := params.io.ymid
-    module.io.zoom := params.io.zoom
-    //module.io.maxiter := io.maxiter
-    module.io.id := params.io.id
+    module.io.xmid := io.userInput.bits.xmid
+    module.io.ymid := io.userInput.bits.ymid
+    module.io.zoom := io.userInput.bits.zoom
+    module.io.id := idReg
   }
 
   //for (i <- 0 until n) {
@@ -88,8 +77,8 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   //}
 
   // Use tapAndRead to expose color module outputs
-  for (i <- 0 until n) {
-    io.ppm_rgb(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.rgb_out)
-    io.ppm_valid(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.valid_out)
-  }
+  // for (i <- 0 until n) {
+  //   io.ppm_rgb(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.rgb_out)
+  //   io.ppm_valid(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.valid_out)
+  // }
 }
