@@ -101,16 +101,23 @@ The **MMU** handles data storage when the image is too large to fit entirely in 
 - **Interface**: It acts as the bridge between the internal processing pipeline and larger memory storage (potentially external RAM or larger BRAM blocks).
 - **Caching**: It helps manage read/write operations to ensure that the visualization remains smooth, preventing screen tearing or artifacts when the compute units fall behind.
 
-### 7. **Common**
+### 7. **UserInput**
+This module sanitizes the raw, noisy signals from the physical buttons and switches.
+-   **Debouncing**: Filters the "bouncing" of physical button presses to produce a single, clean `press` event.
+-   **Edge Detection**: Converts a long button hold into a single-cycle pulse, ensuring one press equals one action.
+-   **Switch Synchronization**: Safely synchronizes the asynchronous slide switch inputs to the system clock to prevent metastability.
+-   **Interface**: Consolidates all clean input signals into a single, reliable `Bundle` for the rest of the hardware to use.
+
+### 8. **Common**
 This directory serves as a library for shared logic across the project.
 - **Global Constants**: Defines system-wide parameters like screen resolution (`640x480`), color depth (`RGB565`), and fixed-point bit width.
 - **Custom Bundles**: Contains Chisel `Bundles` that define the standardized interfaces used to connect modules (e.g., `PixelData`, `ComplexNumber`).
 
-### 8. **c_model**
+### 9. **c_model**
 A software reference implementation written in C.
 - **Golden Reference**: This is used to verify the hardware. The output of the hardware simulation can be compared pixel-by-pixel against this C model to ensure the Mandelbrot math is strictly correct.
 
-### 9. **synth**
+### 10. **synth**
 Contains the build scripts and makefiles for the physical synthesis tools (`OpenXC7` or `F4PGA`). It manages the translation of the generated Verilog into the bitstream that programs the FPGA board.
 
 ---
