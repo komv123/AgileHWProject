@@ -70,15 +70,4 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
     module.io.zoom := io.userInput.bits.zoom
     module.io.id := idReg
   }
-
-  //for (i <- 0 until n) {
-  //  //cu(i).io.start_address := (1024 * i).U
-  //  cu(i).io.start_address := (width * (height / n) * i).U
-  //}
-
-  // Use tapAndRead to expose color module outputs
-  // for (i <- 0 until n) {
-  //   io.ppm_rgb(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.rgb_out)
-  //   io.ppm_valid(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.valid_out)
-  // }
 }
