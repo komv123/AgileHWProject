@@ -13,7 +13,8 @@ class CMColorSpec extends AnyFlatSpec with ChiselSim {
     val width = 32
     val height = 32
     val frame_height = height / n
-    val start_address = width * frame_height * 3
+    //val start_address = width * frame_height * n 
+    val start_address = 0
     val fills = (width * frame_height) / 1024
 
     val computeConfig = ComputeConfig(
@@ -36,17 +37,18 @@ class CMColorSpec extends AnyFlatSpec with ChiselSim {
 
                 println("Start partial frame test")
 
-                dut.io.xmid.poke(-48729.S)  // -3193384776 >> 16
-                dut.io.ymid.poke(8329.S)    // 545867056 >> 16
-                dut.io.zoom.poke(650.S)     // 21474836 >> 16
+                dut.io.xmid.poke(-99796992.S)  // -3193384776 >> 16
+                dut.io.ymid.poke(17057792.S)    // 545867056 >> 16
+                dut.io.zoom.poke(1331200.S)     // 21474836 >> 16
                 dut.io.id.poke(1.U)
 
                 dut.io.id.poke(1.U)
                 
-                for (i <- 0 until fills){
-                    dut.clock.step(1000000)
+                for (i <- 0 until 1){
+                    dut.clock.step(2000000)
                     
                     dut.io.tilelink_out.a.ready.poke(true.B)
+                    dut.io.tilelink_out.a.valid.expect(true.B)
 
                     for (i <- 0 until 1024){    
                         val rgb = dut.io.tilelink_out.a.bits.data.peek().litValue
