@@ -19,7 +19,7 @@
 // Fixed-point configuration: use 32 bits for fractional part
 #define FRAC_BITS 32
 #define FIXED_ONE (1LL << FRAC_BITS)
-#define PRINT 0
+#define PRINT 1
 
 uint32_t k_count = 0;
 
@@ -70,10 +70,6 @@ void colored_pixels(FILE* fp, int k, uint16_t maxiter){
       printf("%03x ", rgb);
     }
 
-    color[0] = color[0] * 17;
-    color[1] = color[1] * 17;
-    color[2] = color[2] * 17;
-    
     fwrite(color, 3, 1, fp);
   }
 }
@@ -103,8 +99,8 @@ int main(int argc, char* argv[])
 
   const uint16_t maxiter = (unsigned short)atoi(argv[4]) < 10 ? 10 : (unsigned short)atoi(argv[4]);
   
-  const int xres = 320;
-  const int yres = 240;
+  const int xres = 160;
+  const int yres = 120;
   const char* filename = argv[5];
 
   /* Precompute pixel width and height in fixed-point */
@@ -118,9 +114,9 @@ int main(int argc, char* argv[])
   printf("escape, df2.0: %ld, %ld\n", escape, double_to_fixed(2.0));
 
   FILE * fp = fopen(filename,"wb");
-  fprintf(fp,
-          "P6\n# Mandelbrot (fixed-point), xmin=%ld, xmax=%ld, ymin=%ld, ymax=%ld, maxiter=%d\n%d %d\n255\n",
-          xmin, xmax, ymin, ymax, maxiter, xres, yres);
+  // fprintf(fp,
+  //         "P6\n# Mandelbrot (fixed-point), xmin=%ld, xmax=%ld, ymin=%ld, ymax=%ld, maxiter=%d\n%d %d\n15\n",
+  //         xmin, xmax, ymin, ymax, maxiter, xres, yres);
 
   int i, j, k;
   
@@ -146,13 +142,7 @@ int main(int argc, char* argv[])
       }
       if(PRINT){printf("%d ", k);}
       /* Compute pixel color and write it to file */
-      if (k >= maxiter) {
-        const unsigned char black[] = {0, 0, 0};
-        fwrite(black, 3, 1, fp);
-      }
-      else {
-        colored_pixels(fp, k, maxiter);
-      }
+      colored_pixels(fp, k, maxiter);
     }
     if(PRINT){printf("\n");}
   }
