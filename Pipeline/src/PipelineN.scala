@@ -10,7 +10,7 @@ import ComputeModule._
 import UserInput._
 
 //class VideoBuffer(implicit c: Configuration) extends Module{
-class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration = defaultConfig) extends Module{
+class Pipeline(width: Int, height: Int, n: Int)(implicit val c: Configuration = defaultConfig) extends Module{
   // Alias for modules that expect 'config' as the implicit name
   val config: Configuration = c
 

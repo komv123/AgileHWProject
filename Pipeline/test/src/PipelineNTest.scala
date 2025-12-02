@@ -8,9 +8,9 @@ import chisel3.util.experimental.BoringUtils
 
 import Pipeline._
 
-class PipelineNTest extends AnyFlatSpec with ChiselSim {
+class PipelineTest extends AnyFlatSpec with ChiselSim {
     "Pipeline" should "render 64 x 64 " in {
-        simulate(new PipelineN(64, 64, 2)) { dut =>
+        simulate(new Pipeline(64, 64, 2)) { dut =>
 
             val writer = new PrintWriter("output64_64.ppm")
 

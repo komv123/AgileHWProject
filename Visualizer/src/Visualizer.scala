@@ -36,7 +36,7 @@ class Visualizer(config: VisualizerConfig) extends Module {
     new VGAController(config.vga, config.clockFrequency)
   )
   val pipeline = Module(
-    new PipelineN(config.vga.horizontal.pixels, config.vga.vertical.pixels, 15)
+    new Pipeline(config.vga.horizontal.pixels, config.vga.vertical.pixels, 15)
   )
 
   val (pixelCount, _) = Counter(

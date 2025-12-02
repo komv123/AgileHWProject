@@ -8,7 +8,7 @@
                 888       Y88b. .d88P 888  T88b     888     888       
                 888        "Y88888P"  888   T88b    888     8888888888
                                                                       
-                         FRACTAL OTIMIZED REAL TIME ENGINE            
+                         FRACTAL OPTIMIZED REAL TIME ENGINE            
                                                                       
                   ┌───────────────────────────────────────────────┐   
                   │ ┌──────────────────┐    ┌───────────────────┐ │   
