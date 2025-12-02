@@ -7,6 +7,7 @@ import Common._
 import VideoBuffer._
 import MMU._
 import ComputeModule._
+import UserInput._
 
 //class VideoBuffer(implicit c: Configuration) extends Module{
 class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultConfig) extends Module{
@@ -20,15 +21,7 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
     //val bufferPointer = Input(UInt(log2Ceil(c.bufferSize).W))
     val framePointer = Input(UInt(24.W))
 
-    // val xmid    = Input(SInt(64.W))
-    // val ymid    = Input(SInt(64.W))
-    // val zoom        = Input(SInt(64.W))
-    // val maxiter     = Input(UInt(16.W))
-    // val new_params  = Input(Bool())
-
-    val select = Input(UInt(4.W))
-    val enter = Input(Bool())
-
+    val userInput = Flipped(Valid(new UserInputPosition(32)))
   })
 
   // Create compute config inline
@@ -41,11 +34,15 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
   val videoBuffer = Module(new VideoBuffer(config))
   val mmu = Module(new MMU()(config))
   val cu = Module(new CompColorWrapper(computeConfig, n = 1, start_address = 0)(c))
-  val params = Module(new Parameters())
 
-  params.io.select := io.select
-  params.io.enter := io.enter
+  val idReg = RegInit(0.U(4.W))
+  val xReg = RegNext(io.userInput.bits.xmid)
+  val yReg = RegNext(io.userInput.bits.ymid)
+  val zReg = RegNext(io.userInput.bits.zoom)
 
+  when(io.userInput.valid && (io.userInput.bits.xmid =/= xReg || io.userInput.bits.ymid =/= yReg || io.userInput.bits.zoom =/= zReg)) {
+    idReg := idReg + 1.U
+  }
   mmu.io.tilelink_in <> cu.io.tilelink_out
   videoBuffer.io.tilelink <> mmu.io.tilelink_out
   io.ReadData <> videoBuffer.io.ReadData
@@ -53,11 +50,8 @@ class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultC
   mmu.io.bufferPointer := videoBuffer.io.bufferPointer 
   mmu.io.framePointer := io.framePointer
 
-  cu.io.xmid := params.io.xmid
-  cu.io.ymid := params.io.ymid
-  cu.io.zoom := params.io.zoom
-  //cu.io.maxiter := io.maxiter
-  cu.io.id := params.io.id 
-
-  //cu.io.start_address := 0.U
+  cu.io.xmid := io.userInput.bits.xmid
+  cu.io.ymid := io.userInput.bits.ymid
+  cu.io.zoom := io.userInput.bits.zoom
+  cu.io.id := idReg
 }
