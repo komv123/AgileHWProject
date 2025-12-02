@@ -419,6 +419,7 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
             //j := 0.S
             j := 0.U
             y := ymax_cu_next  // Initialize y to starting position
+            x := 0.S
 
             stateReg := YLOOP
         }
