@@ -10,7 +10,7 @@ create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_
 
 
 ##Switches
-# set_property -dict { PACKAGE_PIN J15   IOSTANDARD LVCMOS33 } [get_ports { SW[0] }]; #IO_L24N_T3_RS0_15 Sch=sw[0]
+set_property -dict { PACKAGE_PIN J15   IOSTANDARD LVCMOS33 } [get_ports {reset}]; #IO_L24N_T3_RS0_15 Sch=sw[0]
 # set_property -dict { PACKAGE_PIN L16   IOSTANDARD LVCMOS33 } [get_ports { SW[1] }]; #IO_L3N_T0_DQS_EMCCLK_14 Sch=sw[1]
 # set_property -dict { PACKAGE_PIN M13   IOSTANDARD LVCMOS33 } [get_ports { SW[2] }]; #IO_L6N_T0_D08_VREF_14 Sch=sw[2]
 # set_property -dict { PACKAGE_PIN R15   IOSTANDARD LVCMOS33 } [get_ports { SW[3] }]; #IO_L13N_T2_MRCC_14 Sch=sw[3]
@@ -75,11 +75,11 @@ create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_
 #set_property -dict { PACKAGE_PIN C12   IOSTANDARD LVCMOS33 } [get_ports { reset }]; #IO_L3P_T0_DQS_AD1P_15 Sch=cpu_resetn
 
 ##Buttons
-# set_property -dict { PACKAGE_PIN N17   IOSTANDARD LVCMOS33 } [get_ports { io_btnc }]; #IO_L9P_T1_DQS_14 Sch=btnc
-set_property -dict {PACKAGE_PIN M18 IOSTANDARD LVCMOS33} [get_ports reset]
+set_property -dict { PACKAGE_PIN N17   IOSTANDARD LVCMOS33 } [get_ports { io_btnc }]; #IO_L9P_T1_DQS_14 Sch=btnc
+set_property -dict {PACKAGE_PIN M18 IOSTANDARD LVCMOS33} [get_ports io_btnu]
 set_property -dict {PACKAGE_PIN P17 IOSTANDARD LVCMOS33} [get_ports io_btnl]
 set_property -dict {PACKAGE_PIN M17 IOSTANDARD LVCMOS33} [get_ports io_btnr]
-# set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports { BTND }]; #IO_L9N_T1_DQS_D13_14 Sch=btnd
+set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports { io_btnd }]; #IO_L9N_T1_DQS_D13_14 Sch=btnd
 
 
 ##Pmod Headers
