@@ -17,3 +17,4 @@ synth/build/
 synth/chipdb/
 synth/f4pga/
 *.gtkw
+config.mk
