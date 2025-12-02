@@ -57,11 +57,11 @@ object VideoBuffer extends ChiselModule {
 }
 
 object Visualizer extends ChiselModule {
-  override def moduleDeps = Seq(Common, VGA, Pipeline)
+  override def moduleDeps = Seq(Common, VGA, Pipeline, UserInput)
 }
 
 object Pipeline extends ChiselModule {
-  override def moduleDeps = Seq(Common, MMU, VideoBuffer, ComputeModule)
+  override def moduleDeps = Seq(Common, MMU, VideoBuffer, ComputeModule, UserInput)
 }
 
 object UserInput extends ChiselModule {
