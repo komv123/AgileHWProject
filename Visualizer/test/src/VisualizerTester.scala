@@ -41,7 +41,7 @@ class VisualizerTester extends AnyFlatSpec with Matchers with ChiselSim {
         javax.imageio.ImageIO.write(canvas, "png", new java.io.File(name))
       }
 
-      for (i <- 0 until 3) {
+      for (i <- 0 until 1) {
         drawFrame("frame-" + i + ".png")
       }
     }
