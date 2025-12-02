@@ -7,6 +7,7 @@ import Common._
 import VideoBuffer._
 import MMU._
 import ComputeModule._
+import UserInput._
 
 //class VideoBuffer(implicit c: Configuration) extends Module{
 class Pipeline(width: Int, height: Int)(implicit val c: Configuration = defaultConfig) extends Module{

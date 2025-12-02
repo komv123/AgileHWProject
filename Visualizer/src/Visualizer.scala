@@ -7,6 +7,7 @@ import circt.stage.ChiselStage
 
 import vga._
 import Pipeline._
+import UserInput._
 
 case class VisualizerConfig(
     val vga: VGAConfig,
@@ -48,11 +49,11 @@ class Visualizer(config: VisualizerConfig) extends Module {
     )
   )
 
-  userInputs.io.upButton := io.btnU
-  userInputs.io.downButton := io.btnD
-  userInputs.io.leftButton := io.btnL
-  userInputs.io.rightButton := io.btnR
-  userInputs.io.midButton := io.btnC
+  userInputs.io.upButton := io.btnu
+  userInputs.io.downButton := io.btnd
+  userInputs.io.leftButton := io.btnl
+  userInputs.io.rightButton := io.btnr
+  userInputs.io.midButton := io.btnc
   pipeline.io.userInput <> userInputs.io.userInput
 
   pipeline.io.framePointer := pixelCount

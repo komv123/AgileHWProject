@@ -7,6 +7,7 @@ import Common._
 import VideoBuffer._
 import MMU._
 import ComputeModule._
+import UserInput._
 
 //class VideoBuffer(implicit c: Configuration) extends Module{
 class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration = defaultConfig) extends Module{
@@ -76,8 +77,8 @@ class PipelineN(width: Int, height: Int, n: Int)(implicit val c: Configuration =
   //}
 
   // Use tapAndRead to expose color module outputs
-  for (i <- 0 until n) {
-    io.ppm_rgb(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.rgb_out)
-    io.ppm_valid(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.valid_out)
-  }
+  // for (i <- 0 until n) {
+  //   io.ppm_rgb(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.rgb_out)
+  //   io.ppm_valid(i) := chisel3.util.experimental.BoringUtils.tapAndRead(cu(i).color.io.valid_out)
+  // }
 }
