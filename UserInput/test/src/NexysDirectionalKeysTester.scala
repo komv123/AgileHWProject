@@ -27,11 +27,12 @@ class NexysDirectionalKeysTester
     }
   }
 
-  it should "move X and Y correctly in Move Mode" in {
+  it should "move X and Y correctly in Move Mode (dependent on Zoom)" in {
     simulate(
       new NexysDirectionalKeys(
         startCenterX = 0,
         startCenterY = 0,
+        startZoom = 3200, // Zoom >> 5 = 100 step size
         tickDelay = 1
       )
     ) { dut =>
@@ -39,13 +40,15 @@ class NexysDirectionalKeysTester
       dut.io.midButton.poke(false.B)
       dut.io.rightButton.poke(true.B)
       dut.clock.step(1) // Instant update because tickDelay = 1
-      dut.io.userInput.bits.xmid.expect(10.S)
+      // Step size is calculated as zoomReg >> 5
+      // 3200 >> 5 = 100
+      dut.io.userInput.bits.xmid.expect(100.S)
 
       // test down
       dut.io.rightButton.poke(false.B)
       dut.io.downButton.poke(true.B)
       dut.clock.step(1)
-      dut.io.userInput.bits.ymid.expect(10.S)
+      dut.io.userInput.bits.ymid.expect(100.S)
     }
   }
 
@@ -59,13 +62,27 @@ class NexysDirectionalKeysTester
     }
   }
 
+  it should "clamp Zoom at 640 (Zoom In Limit)" in {
+    // Start at 1000. Zooming in (Up button) subtracts 1000.
+    // Result 0 should be clamped to 640.
+    simulate(new NexysDirectionalKeys(startZoom = 1000, tickDelay = 1)) {
+      dut =>
+        dut.io.midButton.poke(true.B)
+        dut.io.upButton.poke(true.B)
+        dut.clock.step(1)
+        dut.io.userInput.bits.zoom.expect(640.S)
+    }
+  }
+
   it should "prioritize Up over Down" in {
-    simulate(new NexysDirectionalKeys(startCenterY = 100, tickDelay = 1)) {
+    simulate(new NexysDirectionalKeys(startCenterY = 100, startZoom = 3200, tickDelay = 1)) {
       dut =>
         dut.io.upButton.poke(true.B)
         dut.io.downButton.poke(true.B)
         dut.clock.step(1)
-        dut.io.userInput.bits.ymid.expect(90.S) // Up (-10) wins
+        // Step size = 3200 >> 5 = 100
+        // Up is subtract: 100 - 100 = 0
+        dut.io.userInput.bits.ymid.expect(0.S) 
     }
   }
 }

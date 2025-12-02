@@ -5,9 +5,10 @@ import chisel3.util._
 
 class AmplitudeInputMapper(
     val threshold: UInt = 10.U,
-    startCenterX: Int = 0,
+    startCenterX: Int = -49152,
     startCenterY: Int = 0,
-    startZoom: Int = 21474836
+    startZoom: Int = 196608,
+    val tickDelay: Int = 20000000
 ) extends Module {
   val io = IO(new Bundle {
     val micIO = Flipped(new SoundInputSignalIO())
@@ -20,12 +21,15 @@ class AmplitudeInputMapper(
   val centerYReg = RegInit(startCenterY.S(32.W))
   val zoomReg = RegInit(startZoom.S(32.W))
 
-  when(io.micIO.valid) {
+  val (tickValue, tickWrap) = Counter(true.B, tickDelay)
+
+  when(tickWrap) {
     when(io.micIO.amplitude > threshold) {
       zoomReg := zoomReg + (io.micIO.amplitude * 100.S)
     }.otherwise {
-      when(zoomReg > 1000.S) {
-        zoomReg := zoomReg - 100.S
+      val nextZoom = zoomReg - 100.S
+      when(zoomReg > 640.S) {
+        zoomReg := Mux(nextZoom < 640.S, 640.S, nextZoom)
       }
     }
   }

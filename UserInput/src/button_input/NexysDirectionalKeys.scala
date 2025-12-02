@@ -9,7 +9,7 @@ class NexysDirectionalKeys(
     startZoom: Int = 196608,
     moveMultiplier: Int = 10,
     zoomMultiplier: Int = 1000,
-    val tickDelay: Int = 1600000
+    val tickDelay: Int = 20000000
 ) extends Module {
   val io = IO(new Bundle {
     val upButton = Input(Bool())
@@ -29,28 +29,32 @@ class NexysDirectionalKeys(
     when(io.midButton) {
       // Zoom mode
       when(io.upButton) {
-        zoomReg := zoomReg - zoomMultiplier.S
+        val nextZoom = zoomReg - zoomMultiplier.S
+        zoomReg := Mux(nextZoom < 640.S, 640.S, nextZoom)
       }.elsewhen(io.downButton) {
         zoomReg := zoomReg + zoomMultiplier.S
       }
 
       when(io.leftButton) {
-        zoomReg := zoomReg - (zoomMultiplier * 10).S
+        val nextZoom = zoomReg - (zoomMultiplier * 10).S
+        zoomReg := Mux(nextZoom < 640.S, 640.S, nextZoom)
       }.elsewhen(io.rightButton) {
         zoomReg := zoomReg + (zoomMultiplier * 10).S
       }
     }.otherwise {
-      // Move mode
+      // Move mode - movement depends on zoom level
+      val moveStep = (zoomReg >> 5).asSInt
+
       when(io.upButton) {
-        centerYReg := centerYReg - moveMultiplier.S
+        centerYReg := centerYReg - moveStep
       }.elsewhen(io.downButton) {
-        centerYReg := centerYReg + moveMultiplier.S
+        centerYReg := centerYReg + moveStep
       }
 
       when(io.leftButton) {
-        centerXReg := centerXReg - moveMultiplier.S
+        centerXReg := centerXReg - moveStep
       }.elsewhen(io.rightButton) {
-        centerXReg := centerXReg + moveMultiplier.S
+        centerXReg := centerXReg + moveStep
       }
     }
   }
