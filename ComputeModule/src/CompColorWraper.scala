@@ -15,14 +15,11 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(
     val xmid = Input(SInt(32.W))
     val ymid = Input(SInt(32.W))
     val zoom = Input(SInt(32.W))
-    // val maxiter     = Input(UInt(16.W))
+
     val id = Input(UInt(4.W))
-    // val start_address = Input(UInt(24.W))
 
     val rgb_out = Output(UInt(12.W))
     val valid_out = Output(Bool())
-    // val k_out       = Output(UInt(32.W))
-    // val j_out       = Output(SInt(16.W))
 
     val tilelink_out = new Tilelink()(c)
   })
@@ -30,7 +27,7 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(
   val computeConfig_modified = ComputeConfig(
     width = width,
     height = height / n,
-    maxiter = 1000
+    maxiter = config.maxiter 
   )
 
   // val compmod = Module(new CompMod(config, n, start_address))
@@ -90,7 +87,6 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(
     io.tilelink_out.a.bits.param := 0.U // NA
     io.tilelink_out.a.bits.size := 1023.U // Full buffer write
     io.tilelink_out.a.bits.source := 0.U // ID 0
-    // io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
     io.tilelink_out.a.bits.address := addroffsetreg + start_address.U
     io.tilelink_out.a.bits.mask := 0.U // Not masking any bits
   }
@@ -105,7 +101,6 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(
         io.tilelink_out.a.bits.param := 0.U // NA
         io.tilelink_out.a.bits.size := 1023.U // Full buffer write
         io.tilelink_out.a.bits.source := 0.U // ID 0
-        // io.tilelink_out.a.bits.address := addroffsetreg + io.start_address
         io.tilelink_out.a.bits.address := addroffsetreg + start_address.U
         io.tilelink_out.a.bits.mask := 0.U // Not masking any bits
         io.tilelink_out.a.bits.data := buffer.io.ReadData.response.bits.readData // Reading directly from buffer
