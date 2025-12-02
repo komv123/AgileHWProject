@@ -57,7 +57,6 @@ object ColorLUTGenerator {
     }
 
     writer.close()
-    println(s"Generated $outputFile with $lutSize entries")
   }
 }
 
