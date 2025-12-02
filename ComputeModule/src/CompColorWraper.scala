@@ -30,7 +30,7 @@ class CompColorWrapper(config: ComputeConfig, n: Int, start_address: Int)(
   val computeConfig_modified = ComputeConfig(
     width = width,
     height = height / n,
-    maxiter = 1000
+    maxiter = config.maxiter 
   )
 
   // val compmod = Module(new CompMod(config, n, start_address))
