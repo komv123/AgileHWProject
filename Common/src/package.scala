@@ -21,7 +21,7 @@ package object Common {
         307200, // bufferSize
         307200, // frameSize
         2, // bufferWidth 2 bytes
-        8 // sourceWidth
+        12 // sourceWidth
       )
     }
   }
