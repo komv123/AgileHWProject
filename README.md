@@ -63,7 +63,7 @@ This project aims to develop a general-purpose visualizer that outputs images th
 
 ---
 
-## Architecture & Module Deep Dive
+## Modules
 
 The project is structured into several modular components, each handling a specific part of the visualization pipeline. Below is a detailed technical explanation of each module:
 
@@ -167,6 +167,7 @@ If you do not use Nix, you must ensure the following dependencies are installed 
 
 Once dependencies are installed, you can use the `mill` script included in the root of this repository to run tasks. You may need to make it executable first:
 ```bash
+curl -L https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.1.0-RC2/mill-dist-1.1.0-RC2-mill.sh -o mill
 chmod +x mill
 ./mill --version
 ```
@@ -182,7 +183,7 @@ Create a file in the root of the repository called `config.mk`.
 For the **Nexys A7 100T Board**, your configuration should look like this:
 
 ```makefile
-MILL = ./mill # or "mill" if using Nix
+MILL = ./mill # if not using Nix install
 SYNTH_TOOL = f4pga # or "openxc7" if installed
 
 # Set the top module for verilog generation
