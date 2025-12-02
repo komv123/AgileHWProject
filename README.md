@@ -1,38 +1,138 @@
-# Real time mandelbrot visualization
+# Real Time Mandelbrot Visualization
 
-## Introduction
+This project aims to develop a general-purpose visualizer that outputs images through a VGA port. The primary milestone is to create a hardware-accelerated Mandelbrot fractal visualizer using a modular architecture. The hardware is described in **Chisel** (Scala) and implemented on FPGA.
 
-This project aims to develop a general purpose visualizer, that outputs image thorugh a VGA port.
-The first milestone is to create a Mandelbrot fractial visualizer, with modular compute units.
-The hardware is described in Chisel and implemented on FPGA.
+## Table of Contents
+- [Architecture & Module Deep Dive](#architecture--module-deep-dive)
+- [Controls](#controls)
+- [Setup](#setup)
+- [Configuration](#configuration-file)
+- [Testing](#testing)
+- [Synthesis](#synthesis)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Architecture & Module Deep Dive
+
+The project is structured into several modular components, each handling a specific part of the visualization pipeline. Below is a detailed technical explanation of each module:
+
+### 1. **Visualizer (Top Level)**
+The **Visualizer** is the top-level module that acts as the entry point for the hardware design.
+- **Clock Generator**: It manages the distinct clock domains—the high-speed system clock (used for the heavy Mandelbrot computation) and the pixel clock (required for strict VGA timing).
+- **IO Mapping**: It instantiates the sub-modules and maps their inputs/outputs to the physical FPGA pins defined in the constraints file (Clock, Reset, VGA HSync/VSync, RGB pins, and Buttons).
+- **Input Handling**: It debounces and interprets the button inputs to control the viewport (x, y, zoom) before passing these parameters to the Compute Engine.
+- **Integration**: It connects the data pipeline from the `ComputeModule` -> `Pipeline` -> `VideoBuffer` -> `VGA` output.
+
+### 2. **ComputeModule**
+This is the mathematical core of the fractal generator.
+- **Algorithm**: It implements the iterative Mandelbrot formula: $Z_{n+1} = Z_n^2 + C$.
+- **Fixed-Point Arithmetic**: To save FPGA resources compared to floating-point, this module uses high-precision fixed-point math to perform complex number squaring and addition.
+- **Parallelism**: Depending on the configuration, multiple compute units can run in parallel to calculate multiple pixels simultaneously, ensuring the hardware keeps up with the video stream.
+
+### 3. **Pipeline**
+The **Pipeline** module orchestrates the flow of data through the system.
+- **Coordinate Generation**: It generates a stream of $(x, y)$ screen coordinates and maps them to the complex plane $(Cr, Ci)$ based on the current zoom level and offset provided by the top-level controller.
+- **Back-pressure Handling**: It implements `Decoupled` interfaces (Ready-Valid handshakes) to manage data flow. If the `VideoBuffer` is full, it pauses the compute units; if the buffer is empty, it signals that pixels are not ready. This ensures no data is dropped even if the computation takes variable time per pixel.
+
+### 4. **VGA**
+The **VGA** module is the display controller responsible for driving the monitor.
+- **Timing Generation**: It consists of counters that generate the standard VESA timing signals (Front Porch, Sync Pulse, Back Porch, Active Video) for the target resolution of 640x480.
+- **Pixel Requesting**: As the "beam" moves across the screen, it sends read requests to the `VideoBuffer` to fetch the color data for the current pixel.
+- **Signal Output**: It drives the physical DAC pins (Red, Green, Blue) and the synchronization signals (HSync, VSync).
+
+### 5. **VideoBuffer**
+The **VideoBuffer** serves as a specialized FIFO (First-In-First-Out) or line buffer between the compute logic and the display logic.
+- **Domain Decoupling**: Since Mandelbrot calculations take a variable amount of time (some pixels finish in 1 cycle, others take 100+), and the VGA display requires a constant pixel rate, this buffer absorbs the jitter.
+- **Dual-Port Memory**: It typically uses Block RAM (BRAM) to allow the Compute module to write results at one speed while the VGA module reads them at the pixel clock speed.
+
+### 6. **MMU (Memory Management Unit)**
+The **MMU** handles data storage when the image is too large to fit entirely in the on-chip Line Buffer.
+- **Interface**: It acts as the bridge between the internal processing pipeline and larger memory storage (potentially external RAM or larger BRAM blocks).
+- **Caching**: It helps manage read/write operations to ensure that the visualization remains smooth, preventing screen tearing or artifacts when the compute units fall behind.
+
+### 7. **Common**
+This directory serves as a library for shared logic across the project.
+- **Global Constants**: Defines system-wide parameters like screen resolution (`640x480`), color depth (`RGB565`), and fixed-point bit width.
+- **Custom Bundles**: Contains Chisel `Bundles` that define the standardized interfaces used to connect modules (e.g., `PixelData`, `ComplexNumber`).
+
+### 8. **c_model**
+A software reference implementation written in C.
+- **Golden Reference**: This is used to verify the hardware. The output of the hardware simulation can be compared pixel-by-pixel against this C model to ensure the Mandelbrot math is strictly correct.
+
+### 9. **synth**
+Contains the build scripts and makefiles for the physical synthesis tools (`OpenXC7` or `F4PGA`). It manages the translation of the generated Verilog into the bitstream that programs the FPGA board.
+
+---
+
+## Controls
+
+The Mandelbrot set navigation is handled via the physical buttons on the board.
+
+| Button | Action |
+| :--- | :--- |
+| **BTNU** | Move Up (Y-axis) |
+| **BTND** | Move Down (Y-axis) |
+| **BTNL** | Move Left (X-axis) |
+| **BTNR** | Move Right (X-axis) |
+| **BTNC + BTNU** | **Zoom In** |
+| **BTNC + BTND** | **Zoom Out** |
+
+*Note: You must hold the Center button (BTNC) while pressing Up or Down to trigger the zoom function.*
+
+---
 
 ## Setup
-This project uses the [Nix](https://github.com/NixOS/nix) package manager.
-You can use the Flake provided in this repository to install all dependencies in a development environment:
-```shell
+
+You can set up the development environment using **Nix** (recommended) or by manually installing dependencies and using the provided `mill` script.
+
+### Option 1: Using Nix (Recommended)
+This project uses the [Nix](https://github.com/NixOS/nix) package manager. This guarantees that all tools (Mill, Verilator, Synthesis tools) are installed with the correct versions.
+
+To enter the development environment:
+```bash
 nix develop
 ```
-If you also want the synthesis tools in your development environment you can those the openxc7 shell instead:
 
-```shell
+If you want the **synthesis tools** (OpenXC7) included in your environment:
+```bash
 nix develop .#openxc7
 ```
+
+### Option 2: Manual Installation (Using `./mill`)
+If you do not use Nix, you must ensure the following dependencies are installed on your system:
+
+**Prerequisites:**
+1.  **Java Development Kit (JDK)**: Version 11 or 17 is recommended.
+2.  **Make**: Required for running build scripts.
+3.  **Verilator**: Required for running hardware simulations.
+4.  **GTKWave** (Optional): Useful for viewing simulation waveforms.
+
+Once dependencies are installed, you can use the `mill` script included in the root of this repository to run tasks. You may need to make it executable first:
+```bash
+chmod +x mill
+./mill --version
+```
+
+*Note: For synthesis, you will also need to manually install Vivado, F4PGA, or OpenXC7 if you are not using the Nix environment.*
+
+---
 
 ## Configuration file
 You can configure the repository to match what you want to do.
 Create a file in the root of the repository called `config.mk`.
-Here is an example of how it can look:
-```make
-MILL = ./mill # Use another install of mill
-SYNTH_TOOL = openxc7 # can be either openxc7 or f4pga
+
+For the **Nexys A7 100T Board**, your configuration should look like this:
+
+```makefile
+MILL = ./mill # or "mill" if using Nix
+SYNTH_TOOL = f4pga # or "openxc7" if installed
 
 # Set the top module for verilog generation
 TOP_MODULE = Visualizer
 
-# Set the FPGA target
-FAMILY  = artix7
-PART    = xc7a35tcpg236-1
-BOARD   = basys3
+# Set the FPGA target for Nexys A7 100T
+BOARD = arty_100
 ```
 
 ## Testing
@@ -42,12 +142,11 @@ mill _.test
 ```
 This will run all the tests.
 
-You can also see which test are available by running:
+You can also see which tests are available by running:
 ```bash
 mill resolve _.test
 ```
 You can then run a specific test with:
-
 ```bash
 mill Visualizer.test
 ```
@@ -57,93 +156,65 @@ open out/Visualizer/test/test.dest/sandbox/frame-0.png
 ```
 
 ## Synthesis
-This repository contains supports two different open-source synthesis flows for generating bitstreams for an FPGA.
-The one provided in the Nix development environment is called openXC7 and works very well but supports only a few FPGAs.
-The other one is F4PGA which is tedious to work with and has to be manually installed but it supports a larger set FPGAs.
-If you want to use the F4PGA tools this README contains a [section](#installing-f4pga) on how to install the F4PGA tools.
+This repository supports two different open-source synthesis flows for generating bitstreams for an FPGA.
+- **openXC7**: Provided in the Nix development environment. Works very well but supports only a few FPGAs.
+- **F4PGA**: Supports a larger set of FPGAs but is more tedious to install.
+
 You can set the synthesis tool in the `config.mk` file.
-
-## Generating SystemVerilog from Chisel
-Right now most synthesis tools only accepts less abstract HDLs like SystemVerilog.
-This means the Chisel code needs to be converted to SystemVerilog representation in order to synthesize it.
-This can be done with the command:
-
-```shell
-make rtl
-```
-
-This will create a directory called ```rtl/``` where the SystemVerilog files are located.
-
-## Synthesizing the design
-Right now, this repository supports the [Basys3](https://digilent.com/reference/programmable-logic/basys-3/reference-manual) and [Nexys A7](https://digilent.com/reference/programmable-logic/nexys-a7/start)(F4PGA only) board.
-To synthsize the design just run following command:
-
-```shell
-make synth
-```
-
-This will create the directory ```synth/build/<target-fpga>``` with a bitstream among other files.
-
-## Programming the FPGA
-The build directory contains a lot of files but the most interesting one is the ```Visualizer.bit``` which is the bitstream file.
-This is the file that is used to program the FPGA.
-To program the FPGA plug in your FPGA via USB and run following command:
-
-```shell
-make program
-```
-
-If you encounter problems you try running it as root or see [Troubleshooting](#troubleshooting) if you prefer not to run random programs as root.
-
-## Installing F4PGA
+### Installing F4PGA
 In order to synthesize with [F4PGA](https://f4pga.org/) it needs to be installed.
-This reposistory can install the tools automatically since these cannot be managed with Nix.
 First set the synthesis tool `SYNTH_TOOL = f4pga` in `config.mk`.
 To install the tool run:
-
-```shell
+```bash
 make install
 ```
+This will create the directory `synth/f4pga/tools` and `synth/f4pga/f4pga-examples`.
 
-This will create the directory ```synth/f4pga/tools``` and ```synth/f4pga/f4pga-examples``` which contains all the neccessary tools.
-The tools only needs to be installed once.
-If you already have the tools installed see [Tips](#Tools)
-
-## Tips
-### Tools
-The tools take up rougly 6GB of storage so you might be interested in deleting them.
-If you ever want to delete the tools just run:
-
-```shell
+F4PGA take up roughly 6GB of storage. If you ever want to delete the tools just run:
+```bash
 make uninstall
 ```
 
+## Generating SystemVerilog from Chisel
+Right now most synthesis tools only accept less abstract HDLs like SystemVerilog.
+This means the Chisel code needs to be converted to SystemVerilog representation in order to synthesize it.
+This can be done with the command:
+```bash
+make rtl
+```
+This will create a directory called `rtl/` where the SystemVerilog files are located.
+
+## Synthesizing the design
+To synthesize the design, in the root directory of the project run:
+```bash
+make synth
+```
+This will create the directory `synth/build/<target-fpga>` with a bitstream among other files.
+
+## Programming the FPGA
+The build directory contains a lot of files but the most interesting one is `Visualizer.bit` (the bitstream file).
+To program the FPGA plug in your FPGA via USB and run the following command:
+```bash
+make program
+```
+If you encounter problems, try running it as root or see [Troubleshooting](#troubleshooting).
+
+## Tips
 ### Makefile
 The Makefile is written such that dependencies are resolved.
 This means if you made a change to the Chisel code and want to reprogram your FPGA you can just run:
-
-```shell
+```bash
 make program
 ```
-
-Which will automatically generate SystemVerilog which will then be synthesized to a bitstream file that will be programmed to the FGPA.
-You do not need to manually run the whole chain of commands showed earlier.
+Which will automatically generate SystemVerilog, synthesize it to a bitstream, and program the FPGA.
 
 ## Troubleshooting
 ### Error: unable to open ftdi device
-Check that your device is properly plugged in and shows up when you run the ```lsusb``` command.
-If the device shows up the problem is most likely permission issues for USB devices.
-On some Linux distrubutions normal users does not get permissions to USB devices by default.
-Trying to program an FPGA will result in an error since it is via USB.
+Check that your device is properly plugged in and shows up when you run the `lsusb` command.
+If the device shows up, the problem is most likely permission issues.
 To fix this run the commands:
-```shell
-sudo bash -c 'echo ATTRS{idVendor}==\"0403\", ATTRS{idProduct}==\"6010\", MODE=\"666\", TAG+=\"uaccess\" > /etc/udev/rules.d/99-ftdi.rules'
+```bash
+sudo bash -c 'echo ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", MODE="666", TAG+="uaccess" > /etc/udev/rules.d/99-ftdi.rules'
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
-You might need to change the ```idVendor``` and ```idProduct``` to another ID.
-You can get these from running ```lsusb``` while your FPGA board is plugged in.
-My Basys 3 board looks like this:
-
-```plain
-Bus 001 Device 004: ID 0403:6010 Future Technology Devices International, Ltd FT2232C/D/H Dual UART/FIFO IC
-```
+*Note: The Nexys A7 100T uses standard FTDI drivers. Ensure your USB cable is data-capable.*
