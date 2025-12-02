@@ -23,8 +23,8 @@ class PipelineNTest extends AnyFlatSpec with ChiselSim {
 
             dut.io.userInput.valid.poke(true.B)
             dut.io.userInput.bits.ymid.poke(0.S)
-            dut.io.userInput.bits.xmid.poke(-87818.S)
-            dut.io.userInput.bits.zoom.poke(131072.S)
+            dut.io.userInput.bits.xmid.poke(-179851264.S)
+            dut.io.userInput.bits.zoom.poke(268435456.S)
 
             var framePointer = 0 
 
