@@ -79,7 +79,7 @@ class FixedMul extends Module {
 
   val product = io.a * io.b
   //io.result := product(63,32).asSInt
-  io.result := product >> 16
+  io.result := product >> 27  // Q5.27 format: shift by 27 bits
 }
 
 // The actual module using the pipeline object
@@ -104,12 +104,12 @@ class IterationPipeline(config: ComputeConfig, n: Int, start_address: Int) exten
   // Fixed-point multiplication helper
   def fixed_mul(a: SInt, b: SInt): SInt = {
     val product = a * b
-    product >> 16
+    product >> 27  // Q5.27 format: shift by 27 bits
   }
 
   // Constants for Mandelbrot computation
-  val escape = 262144.S  // 4.0 in Q16.16 fixed-point
-  val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point
+  val escape = 536870912L.S  // 4.0 in Q5.27 fixed-point (4 << 27)
+  val v_smth = 268435456L.S  // 2.0 in Q5.27 fixed-point (2 << 27)
 
   // Pipeline registers with valid bits
   val stage0_valid = RegInit(false.B)
@@ -297,15 +297,15 @@ class CompMod(config: ComputeConfig, n: Int, start_address: Int) extends Module 
     /* Functions */
     def fixed_mul(a: SInt, b: SInt): SInt = {
         val product = a * b
-        product >> 16
+        product >> 27  // Q5.27 format: shift by 27 bits
     }
     def rising(v: Bool) = v & !RegNext(v)
 
 
     /* Constants */
-    val escape = 262144.S  // 4.0 in Q16.16 fixed-point (was 4.0 in Q32.32)
-    val v_smth = 131072.S  // 2.0 in Q16.16 fixed-point (was 2.0 in Q32.32)
-    val three_eighths = 24576.S  // 3/8 = 0.375 in Q16.16 fixed-point
+    val escape = 536870912L.S  // 4.0 in Q5.27 fixed-point (4 << 27)
+    val v_smth = 268435456L.S  // 2.0 in Q5.27 fixed-point (2 << 27)
+    val three_eighths = 50331648L.S  // 3/8 = 0.375 in Q5.27 fixed-point (0.375 * (1 << 27))
 
     val addr_maxCU = (width * height)
     
