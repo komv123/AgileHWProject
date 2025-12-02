@@ -19,7 +19,7 @@ The project is structured into several modular components, each handling a speci
 
 ### 1. **Visualizer (Top Level)**
 The **Visualizer** is the top-level module that acts as the entry point for the hardware design.
-- **Clock Domain Crossing**: It manages the distinct clock domains—the high-speed system clock (used for the heavy Mandelbrot computation) and the pixel clock (required for strict VGA timing).
+- **Clock Generator**: It manages the distinct clock domains—the high-speed system clock (used for the heavy Mandelbrot computation) and the pixel clock (required for strict VGA timing).
 - **IO Mapping**: It instantiates the sub-modules and maps their inputs/outputs to the physical FPGA pins defined in the constraints file (Clock, Reset, VGA HSync/VSync, RGB pins, and Buttons).
 - **Input Handling**: It debounces and interprets the button inputs to control the viewport (x, y, zoom) before passing these parameters to the Compute Engine.
 - **Integration**: It connects the data pipeline from the `ComputeModule` -> `Pipeline` -> `VideoBuffer` -> `VGA` output.
@@ -87,7 +87,7 @@ The Mandelbrot set navigation is handled via the physical buttons on the board.
 You can set up the development environment using **Nix** (recommended) or by manually installing dependencies and using the provided `mill` script.
 
 ### Option 1: Using Nix (Recommended)
-This project uses the [Nix](https://github.com/NixOS/nix) package manager. This guarantees that all tools (Java, Scala, Mill, Verilator, Synthesis tools) are installed with the correct versions.
+This project uses the [Nix](https://github.com/NixOS/nix) package manager. This guarantees that all tools (Mill, Verilator, Synthesis tools) are installed with the correct versions.
 
 To enter the development environment:
 ```bash
@@ -114,7 +114,7 @@ chmod +x mill
 ./mill --version
 ```
 
-*Note: For synthesis (converting code to bitstream), you will also need to manually install Vivado, F4PGA, or OpenXC7 if you are not using the Nix environment.*
+*Note: For synthesis, you will also need to manually install Vivado, F4PGA, or OpenXC7 if you are not using the Nix environment.*
 
 ---
 
@@ -138,17 +138,17 @@ BOARD = arty_100
 ## Testing
 Open a terminal in the directory and run:
 ```bash
-./mill _.test
+mill _.test
 ```
 This will run all the tests.
 
 You can also see which tests are available by running:
 ```bash
-./mill resolve _.test
+mill resolve _.test
 ```
 You can then run a specific test with:
 ```bash
-./mill Visualizer.test
+mill Visualizer.test
 ```
 This specific test and some other tests generate a visual output which you can see here:
 ```bash
@@ -170,8 +170,7 @@ make install
 ```
 This will create the directory `synth/f4pga/tools` and `synth/f4pga/f4pga-examples`.
 
-### /tools
-The tools take up roughly 6GB of storage. If you ever want to delete the tools just run:
+F4PGA take up roughly 6GB of storage. If you ever want to delete the tools just run:
 ```bash
 make uninstall
 ```
